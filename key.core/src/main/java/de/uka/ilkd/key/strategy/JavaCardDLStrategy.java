@@ -291,7 +291,12 @@ public class JavaCardDLStrategy extends AbstractFeatureStrategy implements Compo
                 applyTF(instOf("uSub"), IsInductionVariable.INSTANCE), longConst(0), inftyConst()));
         }
 
+        setupTracingStrategy(d);
         return d;
+    }
+
+    private void setupTracingStrategy(RuleSetDispatchFeature d) {
+        bindRuleSet(d, "retrace", longConst(-200));
     }
 
     private void setupSelectSimplification(final RuleSetDispatchFeature d) {
