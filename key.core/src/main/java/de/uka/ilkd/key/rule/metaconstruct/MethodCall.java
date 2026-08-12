@@ -34,10 +34,13 @@ import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.logic.op.IProgramVariable;
 import de.uka.ilkd.key.logic.op.ProgramSV;
 import de.uka.ilkd.key.logic.op.ProgramVariable;
+import de.uka.ilkd.key.proof.Goal;
+import de.uka.ilkd.key.proof.Node;
 import de.uka.ilkd.key.rule.inst.SVInstantiations;
 import de.uka.ilkd.key.util.Debug;
 
 import org.key_project.logic.Name;
+import org.key_project.logic.Term;
 import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.logic.sort.Sort;
 import org.key_project.util.collection.ImmutableArray;
@@ -45,6 +48,8 @@ import org.key_project.util.collection.ImmutableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Symbolically executes a method invocation.
@@ -73,13 +78,15 @@ public final class MethodCall extends ProgramTransformer {
     protected ImmutableArray<Expression> arguments;
     protected KeYJavaType staticPrefixType;
 
+    private final ProgramSV targetMethodId;
+
     /**
      * creates the methodcall-MetaConstruct
      *
      * @param body the ProgramElement contained by the meta construct
      */
     public MethodCall(ProgramElement body) {
-        this(null, null, body);
+        this(null, null, null, body);
     }
 
     /**
@@ -89,7 +96,7 @@ public final class MethodCall extends ProgramTransformer {
      * @param body the ProgramElement contained by the meta construct
      */
     public MethodCall(SchemaVariable result, ProgramElement body) {
-        this(null, result, body);
+        this(null, result, null, body);
     }
 
     /**
@@ -98,8 +105,8 @@ public final class MethodCall extends ProgramTransformer {
      * @param result the SchemaVariable that is used to keep the result
      * @param body the ProgramElement contained by the meta construct
      */
-    public MethodCall(ProgramSV ec, SchemaVariable result, ProgramElement body) {
-        this(new Name("method-call"), ec, result, body);
+    public MethodCall(ProgramSV ec, SchemaVariable result, ProgramSV targetMethodId, ProgramElement body) {
+        this(new Name("method-call"), ec, result, targetMethodId, body);
     }
 
     /**
@@ -110,10 +117,11 @@ public final class MethodCall extends ProgramTransformer {
      * @param name Method name.
      * @param ec The Schema Variable.
      */
-    protected MethodCall(Name name, ProgramSV ec, SchemaVariable result, ProgramElement body) {
+    protected MethodCall(Name name, ProgramSV ec, SchemaVariable result, ProgramSV targetMethodId, ProgramElement body) {
         super(name, body);
         this.resultVar = result;
         this.execContextSV = ec;
+        this.targetMethodId = targetMethodId;
     }
 
     /** gets an array of expression and returns a list of types */
@@ -209,7 +217,7 @@ public final class MethodCall extends ProgramTransformer {
     @Override
     public ProgramElement[] transform(ProgramElement pe, Services services,
             SVInstantiations svInst) {
-        return new MethodCall((ProgramSV) execContextSV, resultVar, body())
+        return new MethodCall((ProgramSV) execContextSV, resultVar, targetMethodId, body())
                 .transformImpl(pe, services, svInst);
     }
 

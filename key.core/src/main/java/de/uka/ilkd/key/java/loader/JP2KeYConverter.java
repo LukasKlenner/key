@@ -2018,17 +2018,34 @@ class JP2KeYVisitor extends GenericVisitorAdapter<Object, Void> {
             case "#method-call" -> {
                 ProgramSV execSV = null;
                 ProgramSV returnSV = null;
+                ProgramSV methodId = null;
                 for (int i = 0; i < labels.size(); i++) {
                     final OperatorSV sv = (OperatorSV) labels.get(i);
                     if (sv.sort() == ProgramSVSort.VARIABLE) {
                         returnSV = (ProgramSV) sv;
-                    }
-                    if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
+                    } else if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
                         execSV = (ProgramSV) sv;
+                    } else if (sv.sort() == ProgramSVSort.STRINGLITERAL) {
+                        methodId = (ProgramSV) sv;
                     }
+
                 }
-                yield new MethodCall(execSV, returnSV, accept(n.getChild()));
+                yield new MethodCall(execSV, returnSV, methodId, accept(n.getChild()));
             }
+//            case "#method-call-traced" -> {
+//                ProgramSV execSV = null;
+//                ProgramSV returnSV = null;
+//                for (int i = 0; i < labels.size(); i++) {
+//                    final OperatorSV sv = (OperatorSV) labels.get(i);
+//                    if (sv.sort() == ProgramSVSort.VARIABLE) {
+//                        returnSV = (ProgramSV) sv;
+//                    }
+//                    if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
+//                        execSV = (ProgramSV) sv;
+//                    }
+//                }
+//                yield new MethodCallTraced(execSV, returnSV, accept(n.getChild()));
+//            }
             case "#evaluate-arguments" -> new EvaluateArgs(accept(n.getChild()));
             case "#constructor-call" -> new ConstructorCall(labels.get(0), accept(n.getChild()));
             case "#special-constructor-call" -> new SpecialConstructorCall(accept(n.getChild()));
