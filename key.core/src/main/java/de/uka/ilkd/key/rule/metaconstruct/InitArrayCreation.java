@@ -123,7 +123,8 @@ public class InitArrayCreation extends InitArray {
             }
         }
 
-        bodyStmnts.add(checkNegativeDimension(checkDimensions, services));
+        // TODO revert
+        //bodyStmnts.add(checkNegativeDimension(checkDimensions, services));
 
         return pvars;
     }

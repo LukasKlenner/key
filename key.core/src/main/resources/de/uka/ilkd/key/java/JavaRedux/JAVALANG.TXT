@@ -58,4 +58,3 @@ java.util.ListIteratorImpl
 java.util.Date
 java.util.LinkedHashMap
 java.util.LinkedList
-tracer.Trace

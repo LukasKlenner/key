@@ -15,9 +15,11 @@ import de.uka.ilkd.key.logic.*;
 import de.uka.ilkd.key.logic.label.OriginTermLabelFactory;
 import de.uka.ilkd.key.proof.*;
 import de.uka.ilkd.key.proof.init.InitConfig;
+import de.uka.ilkd.key.proof.init.JavaProfileWithTracing;
 import de.uka.ilkd.key.proof.init.Profile;
 import de.uka.ilkd.key.proof.io.consistency.FileRepo;
 import de.uka.ilkd.key.proof.mgt.SpecificationRepository;
+import de.uka.ilkd.key.proof.tracing.TracingState;
 import de.uka.ilkd.key.util.KeYResourceManager;
 
 import org.key_project.logic.LogicServices;
@@ -116,6 +118,9 @@ public class Services implements TermServices, LogicServices, ProofServices {
     @Nullable
     private JavaService javaService;
 
+    @Nullable
+    private final TracingState tracingState;
+
     /**
      * creates a new Services object with a new TypeConverter and a new JavaInfo object with no
      * information stored at none of these.
@@ -146,6 +151,12 @@ public class Services implements TermServices, LogicServices, ProofServices {
             this.javaService = javaService.copy(this);
             this.javaInfo = new JavaInfo(new KeYProgModelInfo(this.javaService), this);
         }
+
+        if (profile instanceof JavaProfileWithTracing) {
+            tracingState = new TracingState();
+        } else {
+            tracingState = null;
+        }
     }
 
     private Services(Services s) {
@@ -171,6 +182,12 @@ public class Services implements TermServices, LogicServices, ProofServices {
         this.termBuilder = new TermBuilder(new TermFactory(caches.getTermFactoryCache()), this);
         this.termBuilderWithoutCache = new TermBuilder(new TermFactory(), this);
         this.originFactory = s.originFactory;
+
+        if (s.tracingState != null) {
+            this.tracingState = new TracingState(s.tracingState);
+        } else {
+            this.tracingState = null;
+        }
     }
 
     public Services getOverlay(NamespaceSet namespaces) {
@@ -510,6 +527,11 @@ public class Services implements TermServices, LogicServices, ProofServices {
     public OriginTermLabelFactory getOriginFactory() {
         return originFactory;
     }
+
+    public @Nullable TracingState getTracingState() {
+        return tracingState;
+    }
+
     // =================================================================================================================
     // =================================================================================================================
 
