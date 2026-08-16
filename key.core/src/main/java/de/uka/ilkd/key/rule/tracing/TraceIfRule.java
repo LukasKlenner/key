@@ -4,7 +4,10 @@ import de.uka.ilkd.key.java.JavaTools;
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.SourceElement;
 import de.uka.ilkd.key.java.ast.Statement;
+import de.uka.ilkd.key.java.ast.expression.Expression;
+import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
 import de.uka.ilkd.key.java.ast.statement.If;
+import de.uka.ilkd.key.logic.sort.ProgramSVSort;
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.logic.JavaBlock;
 import de.uka.ilkd.key.logic.TermBuilder;
@@ -54,7 +57,11 @@ public class TraceIfRule extends AbstractTraceRule {
 
         SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
 
-        if (!(active instanceof If)) {
+        if (!(active instanceof If ifStmt)) {
+            return false;
+        }
+
+        if (!ProgramSVSort.SIMPLEEXPRESSION.canStandFor(ifStmt.getExpression(), null, services)) {
             return false;
         }
 
@@ -83,6 +90,7 @@ public class TraceIfRule extends AbstractTraceRule {
         JTerm progPost = up.second;
 
         SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
+        If ifStmt = (If) active;
         Statement branchBody = app.getResolvedBranchBody();
 
         JavaBlock newJb = JavaTools.replaceStatement(
@@ -99,7 +107,22 @@ public class TraceIfRule extends AbstractTraceRule {
                 new SequentFormula(newGoalFormula),
                 app.posInOccurrence());
 
+        addGuardAssumption(onlyGoal, ifStmt.getExpression(), app.isThenBranch(),
+                services, progPost);
+
         return result;
+    }
+
+    private void addGuardAssumption(Goal goal, Expression guard, boolean isTrue,
+            Services services, JTerm progPost) {
+        ExecutionContext ec = TraceMethodCallRule.extractExecutionContext(services, progPost);
+        JTerm guardTerm = services.getTypeConverter().convertToLogicElement(guard, ec);
+        TermBuilder tb = services.getTermBuilder();
+        JTerm boolTerm = isTrue
+                ? services.getTypeConverter().getBooleanLDT().getTrueTerm()
+                : services.getTypeConverter().getBooleanLDT().getFalseTerm();
+        JTerm assumption = tb.equals(guardTerm, boolTerm);
+        goal.addFormula(new SequentFormula(assumption), true, false);
     }
 
     private static Pair<JTerm, JTerm> applyUpdates(JTerm focusTerm, TermServices services) {
