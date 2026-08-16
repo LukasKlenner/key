@@ -1,0 +1,124 @@
+package de.uka.ilkd.key.rule.tracing;
+
+import de.uka.ilkd.key.java.JavaTools;
+import de.uka.ilkd.key.java.Services;
+import de.uka.ilkd.key.java.ast.SourceElement;
+import de.uka.ilkd.key.java.ast.Statement;
+import de.uka.ilkd.key.java.ast.statement.LoopStatement;
+import de.uka.ilkd.key.logic.JTerm;
+import de.uka.ilkd.key.logic.JavaBlock;
+import de.uka.ilkd.key.logic.TermBuilder;
+import de.uka.ilkd.key.logic.TermServices;
+import de.uka.ilkd.key.logic.op.JModality;
+import de.uka.ilkd.key.logic.op.Transformer;
+import de.uka.ilkd.key.logic.op.UpdateApplication;
+import de.uka.ilkd.key.proof.Goal;
+import de.uka.ilkd.key.proof.tracing.AbstractTraceRule;
+import de.uka.ilkd.key.rule.IBuiltInRuleApp;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import org.key_project.logic.Name;
+import org.key_project.prover.rules.RuleAbortException;
+import org.key_project.prover.rules.RuleApp;
+import org.key_project.prover.sequent.PosInOccurrence;
+import org.key_project.prover.sequent.SequentFormula;
+import org.key_project.util.collection.ImmutableList;
+import org.key_project.util.collection.Pair;
+
+@NullMarked
+public class TraceLoopRule extends AbstractTraceRule {
+
+    private static final Name NAME = new Name("Traced Loop");
+
+    public static final TraceLoopRule INSTANCE = new TraceLoopRule();
+
+    private TraceLoopRule() {
+    }
+
+    @Override
+    public boolean isApplicable(Goal goal, @Nullable PosInOccurrence pio) {
+        if (pio == null || !pio.isTopLevel() || pio.isInAntec()) {
+            return false;
+        }
+        if (Transformer.inTransformer(pio)) {
+            return false;
+        }
+
+        Services services = goal.proof().getServices();
+        Pair<JTerm, JTerm> up = applyUpdates((JTerm) pio.subTerm(), services);
+        JTerm progPost = up.second;
+
+        if (!(progPost.op() instanceof JModality)) {
+            return false;
+        }
+
+        SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
+
+        if (!(active instanceof LoopStatement)) {
+            return false;
+        }
+
+        return getTracingState(goal).isNextTraceElementAnIfOrElse();
+    }
+
+    @Override
+    public IBuiltInRuleApp createApp(@Nullable PosInOccurrence pos, TermServices services) {
+        return new TraceLoopRuleApp(this, pos, services);
+    }
+
+    @Override
+    public ImmutableList<Goal> applyImpl(Goal goal, RuleApp ruleApp) {
+        TraceLoopRuleApp app = (TraceLoopRuleApp) ruleApp;
+        Services services = goal.proof().getServices();
+        TermBuilder tb = services.getTermBuilder();
+
+        if (!app.complete()) {
+            throw new RuleAbortException(
+                    "Trace loop rule app not fully instantiated");
+        }
+
+        JTerm focusTerm = (JTerm) app.posInOccurrence().subTerm();
+        Pair<JTerm, JTerm> up = applyUpdates(focusTerm, services);
+        JTerm u = up.first;
+        JTerm progPost = up.second;
+
+        SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
+        Statement replacement = app.getResolvedReplacement();
+
+        // replacement is null when exiting the loop — removes the while statement
+        JavaBlock newJb = JavaTools.replaceStatement(
+                progPost.javaBlock(), services, active, replacement);
+
+        var modality = (JModality) progPost.op();
+        JTerm newProgPost = tb.prog(modality.kind(), newJb, progPost.sub(0));
+        JTerm newGoalFormula = tb.apply(u, newProgPost, null);
+
+        ImmutableList<Goal> result = goal.split(1);
+        Goal onlyGoal = result.head();
+        onlyGoal.setBranchLabel("Trace: " + (app.isEnterBody() ? "loop-enter" : "loop-exit"));
+        onlyGoal.changeFormula(
+                new SequentFormula(newGoalFormula),
+                app.posInOccurrence());
+
+        return result;
+    }
+
+    private static Pair<JTerm, JTerm> applyUpdates(JTerm focusTerm, TermServices services) {
+        if (focusTerm.op() instanceof UpdateApplication) {
+            return new Pair<>(UpdateApplication.getUpdate(focusTerm),
+                    UpdateApplication.getTarget(focusTerm));
+        } else {
+            return new Pair<>(services.getTermBuilder().skip(), focusTerm);
+        }
+    }
+
+    @Override
+    public Name name() {
+        return NAME;
+    }
+
+    @Override
+    public String toString() {
+        return name().toString();
+    }
+}
