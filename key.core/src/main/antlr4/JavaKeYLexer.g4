@@ -67,6 +67,8 @@ CLASSPATH:'\\classpath';
 BOOTCLASSPATH:'\\bootclasspath';
 NODEFAULTCLASSES:'\\noDefaultClasses';
 JAVASOURCE:'\\javaSource'; // TODO: remove
+TRACEFILE:'\\traceFile';
+TRACEFUNCTIONDB:'\\traceFunctionDB';
 
 CHOOSECONTRACT : '\\chooseContract';
 CONTRACTS : '\\contracts';

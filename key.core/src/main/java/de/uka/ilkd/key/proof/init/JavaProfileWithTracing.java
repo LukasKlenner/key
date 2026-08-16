@@ -1,7 +1,11 @@
 package de.uka.ilkd.key.proof.init;
 
 import de.uka.ilkd.key.rule.BuiltInRule;
+import de.uka.ilkd.key.rule.LoopApplyHeadRule;
+import de.uka.ilkd.key.rule.LoopScopeInvariantRule;
+import de.uka.ilkd.key.rule.WhileInvariantRule;
 import de.uka.ilkd.key.rule.tracing.TraceIfRule;
+import de.uka.ilkd.key.rule.tracing.TraceLoopRule;
 import de.uka.ilkd.key.rule.tracing.TraceMethodCallRule;
 import org.key_project.util.collection.ImmutableList;
 
@@ -39,11 +43,19 @@ public class JavaProfileWithTracing extends JavaProfile {
     protected ImmutableList<BuiltInRule> initBuiltInRules() {
         ImmutableList<BuiltInRule> builtInRules = super.initBuiltInRules();
 
+        // Remove loop-related built-in rules — traced proofs use TraceLoopRule instead
+        builtInRules = builtInRules
+                .removeFirst(WhileInvariantRule.INSTANCE)
+                .removeFirst(LoopScopeInvariantRule.INSTANCE)
+                .removeFirst(LoopApplyHeadRule.INSTANCE);
+
         // must stay at the front of list according to comment in JavaProfile.initBuiltInRules()
         BuiltInRule first = builtInRules.get(0);
         return builtInRules.removeFirst(first)
                 .prepend(TraceMethodCallRule.INSTANCE)
                 .prepend(TraceIfRule.INSTANCE)
+                .prepend(TraceLoopRule.INSTANCE)
                 .prepend(first);
     }
+
 }

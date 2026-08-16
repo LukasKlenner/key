@@ -22,6 +22,8 @@ decls
     ( bootClassPath          // for problems
     | stlist=classPaths      // for problems
     | string=programSource      // for problems
+    | traceFile              // for tracing
+    | traceFunctionDB        // for tracing
     | one_include_statement
     | options_choice
     | option_decls
@@ -318,6 +320,9 @@ classPaths
 ;
 
 programSource: JAVASOURCE result=oneProgramSource SEMI;
+
+traceFile: TRACEFILE path=string_value SEMI;
+traceFunctionDB: TRACEFUNCTIONDB path=string_value SEMI;
 
 simple_ident
    :

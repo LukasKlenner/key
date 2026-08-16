@@ -8,6 +8,7 @@ import de.uka.ilkd.key.java.ast.Statement;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
 import de.uka.ilkd.key.java.ast.expression.Expression;
 import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
+import de.uka.ilkd.key.java.ast.reference.ArrayReference;
 import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
 import de.uka.ilkd.key.java.ast.reference.FieldReference;
 import de.uka.ilkd.key.java.ast.reference.MethodReference;
@@ -109,6 +110,8 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         if (method.isPrivate()) {
             return false;
         }
+
+        // TODO add whitelist for methodsCall that are not traced (e.g., createArrayHelper, etc.)
 
         return getTracingState(goal).isNextTraceElementACall();
     }
@@ -236,6 +239,8 @@ public class TraceMethodCallRule extends AbstractTraceRule {
             return pv.getKeYJavaType();
         } else if (refPrefix instanceof FieldReference fr) {
             return fr.getProgramVariable().getKeYJavaType();
+        } else if (refPrefix instanceof ArrayReference ar) {
+            return ar.getKeYJavaType(services, executionContext);
         } else if (refPrefix instanceof SuperReference) {
             return services.getJavaInfo().getSuperclass(
                     executionContext.getTypeReference().getKeYJavaType());

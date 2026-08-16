@@ -16,6 +16,10 @@ import de.uka.ilkd.key.proof.ProofAggregate;
 import de.uka.ilkd.key.proof.io.IProofFileParser;
 import de.uka.ilkd.key.proof.io.KeYFile;
 import de.uka.ilkd.key.proof.io.consistency.FileRepo;
+import de.uka.ilkd.key.proof.tracing.FunctionDatabase;
+import de.uka.ilkd.key.proof.tracing.FunctionDatabaseParser;
+import de.uka.ilkd.key.proof.tracing.TraceFileParser;
+import de.uka.ilkd.key.proof.tracing.TracingState;
 import de.uka.ilkd.key.settings.Configuration;
 import de.uka.ilkd.key.settings.ProofSettings;
 import de.uka.ilkd.key.speclang.PositionedString;
@@ -120,7 +124,31 @@ public final class KeYUserProblemFile extends KeYFile implements ProofOblInput {
         // read taclets
         warnings = warnings.add(getPositionedStrings(readRules()));
 
+        // load trace files if present
+        loadTracingState();
+
         return warnings;
+    }
+
+    private void loadTracingState() throws ProofInputException {
+        Path traceFilePath = readTraceFile();
+        Path funcDBPath = readTraceFunctionDB();
+        if (traceFilePath == null && funcDBPath == null) {
+            return;
+        }
+        if (traceFilePath == null || funcDBPath == null) {
+            throw new ProofInputException(
+                    "Both \\traceFile and \\traceFunctionDB must be specified together.");
+        }
+        try {
+            var traceElements = TraceFileParser.parse(traceFilePath);
+            var functionMap = FunctionDatabaseParser.parse(funcDBPath);
+            var functionDatabase = new FunctionDatabase(functionMap);
+            var tracingState = new TracingState(traceElements, functionDatabase);
+            initConfig.getServices().setTracingState(tracingState);
+        } catch (IOException e) {
+            throw new ProofInputException("Failed to load trace files", e);
+        }
     }
 
     @Override

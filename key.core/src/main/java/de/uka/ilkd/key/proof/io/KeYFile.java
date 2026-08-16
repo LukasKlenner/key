@@ -335,6 +335,32 @@ public class KeYFile implements EnvInput {
         return null;
     }
 
+    public @Nullable Path readTraceFile() {
+        ProblemInformation pi = getProblemInformation();
+        String traceFile = pi.getTraceFile();
+        if (traceFile == null) {
+            return null;
+        }
+        Path tracePath = Paths.get(normalizeStoredPath(traceFile));
+        if (!tracePath.isAbsolute()) {
+            tracePath = file.file().getParent().resolve(tracePath).normalize();
+        }
+        return tracePath;
+    }
+
+    public @Nullable Path readTraceFunctionDB() {
+        ProblemInformation pi = getProblemInformation();
+        String traceFunctionDB = pi.getTraceFunctionDB();
+        if (traceFunctionDB == null) {
+            return null;
+        }
+        Path dbPath = Paths.get(normalizeStoredPath(traceFunctionDB));
+        if (!dbPath.isAbsolute()) {
+            dbPath = file.file().getParent().resolve(dbPath).normalize();
+        }
+        return dbPath;
+    }
+
 
     @Override
     public ImmutableSet<PositionedString> read() throws ProofInputException {

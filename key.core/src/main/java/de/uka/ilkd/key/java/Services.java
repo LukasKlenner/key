@@ -15,7 +15,6 @@ import de.uka.ilkd.key.logic.*;
 import de.uka.ilkd.key.logic.label.OriginTermLabelFactory;
 import de.uka.ilkd.key.proof.*;
 import de.uka.ilkd.key.proof.init.InitConfig;
-import de.uka.ilkd.key.proof.init.JavaProfileWithTracing;
 import de.uka.ilkd.key.proof.init.Profile;
 import de.uka.ilkd.key.proof.io.consistency.FileRepo;
 import de.uka.ilkd.key.proof.mgt.SpecificationRepository;
@@ -119,7 +118,7 @@ public class Services implements TermServices, LogicServices, ProofServices {
     private JavaService javaService;
 
     @Nullable
-    private final TracingState tracingState;
+    private TracingState tracingState;
 
     /**
      * creates a new Services object with a new TypeConverter and a new JavaInfo object with no
@@ -152,11 +151,7 @@ public class Services implements TermServices, LogicServices, ProofServices {
             this.javaInfo = new JavaInfo(new KeYProgModelInfo(this.javaService), this);
         }
 
-        if (profile instanceof JavaProfileWithTracing) {
-            tracingState = new TracingState();
-        } else {
-            tracingState = null;
-        }
+        this.tracingState = null;
     }
 
     private Services(Services s) {
@@ -306,6 +301,9 @@ public class Services implements TermServices, LogicServices, ProofServices {
         nameRecorder.set(detached);
         s.setJavaModel(getJavaModel());
         s.originFactory = originFactory;
+        if (tracingState != null) {
+            s.tracingState = new TracingState(tracingState);
+        }
         return s;
     }
 
@@ -336,6 +334,9 @@ public class Services implements TermServices, LogicServices, ProofServices {
         s.nameRecorder.set(nameRecorder.get().copy());
         s.setJavaModel(getJavaModel());
         s.originFactory = originFactory;
+        if (tracingState != null) {
+            s.tracingState = new TracingState(tracingState);
+        }
         return s;
     }
 
@@ -530,6 +531,10 @@ public class Services implements TermServices, LogicServices, ProofServices {
 
     public @Nullable TracingState getTracingState() {
         return tracingState;
+    }
+
+    public void setTracingState(@Nullable TracingState tracingState) {
+        this.tracingState = tracingState;
     }
 
     // =================================================================================================================

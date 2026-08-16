@@ -2,23 +2,15 @@ package de.uka.ilkd.key.proof.tracing;
 
 import org.key_project.util.collection.ImmutableList;
 
-import java.util.Map;
-
 public class TracingState {
 
     private ImmutableList<TraceElement> traceElements;
 
     private final FunctionDatabase functionDatabase;
 
-    public TracingState() {
-        this.functionDatabase = new FunctionDatabase(Map.of(
-                1, "Inheritance#main(String[]):void",
-                2, "C#getNumber(int):int"
-        ));
-        this.traceElements = ImmutableList.of(
-                new TraceElement.Else(),
-                new TraceElement.Call(2)
-        );
+    public TracingState(ImmutableList<TraceElement> traceElements, FunctionDatabase functionDatabase) {
+        this.traceElements = traceElements;
+        this.functionDatabase = functionDatabase;
     }
 
     public TracingState(TracingState other) {

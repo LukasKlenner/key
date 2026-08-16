@@ -73,6 +73,16 @@ public class ProblemInformation {
     private @Nullable String javaSource;
 
     /**
+     * Value of the "\traceFile".
+     */
+    private @Nullable String traceFile;
+
+    /**
+     * Value of the "\traceFunctionDB".
+     */
+    private @Nullable String traceFunctionDB;
+
+    /**
      *
      */
     private boolean hasProblemTerm;
@@ -145,6 +155,22 @@ public class ProblemInformation {
 
     public void setJavaSource(@Nullable String javaSource) {
         this.javaSource = javaSource;
+    }
+
+    public @Nullable String getTraceFile() {
+        return traceFile;
+    }
+
+    public void setTraceFile(@Nullable String traceFile) {
+        this.traceFile = traceFile;
+    }
+
+    public @Nullable String getTraceFunctionDB() {
+        return traceFunctionDB;
+    }
+
+    public void setTraceFunctionDB(@Nullable String traceFunctionDB) {
+        this.traceFunctionDB = traceFunctionDB;
     }
 
     public @NonNull List<String> getClasspath() {

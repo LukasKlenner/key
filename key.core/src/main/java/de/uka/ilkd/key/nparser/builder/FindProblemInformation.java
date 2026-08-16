@@ -43,6 +43,8 @@ public class FindProblemInformation extends AbstractBuilder<Object> {
         ctx.classPaths().forEach(
             it -> information.getClasspath().addAll(Objects.requireNonNull(accept(it))));
         information.setJavaSource(acceptFirst(ctx.programSource()));
+        information.setTraceFile(acceptFirst(ctx.traceFile()));
+        information.setTraceFunctionDB(acceptFirst(ctx.traceFunctionDB()));
         return null;
     }
 
@@ -112,6 +114,16 @@ public class FindProblemInformation extends AbstractBuilder<Object> {
     @Override
     public String visitPreferences(JavaKeYParser.PreferencesContext ctx) {
         return ctx.s != null ? (String) accept(ctx.s) : null;
+    }
+
+    @Override
+    public String visitTraceFile(JavaKeYParser.TraceFileContext ctx) {
+        return accept(ctx.path);
+    }
+
+    @Override
+    public String visitTraceFunctionDB(JavaKeYParser.TraceFunctionDBContext ctx) {
+        return accept(ctx.path);
     }
 
     /**
