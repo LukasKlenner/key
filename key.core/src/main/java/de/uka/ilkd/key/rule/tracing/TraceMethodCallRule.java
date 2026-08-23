@@ -112,7 +112,7 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         }
 
         // TODO add whitelist for methodsCall that are not traced (e.g., createArrayHelper, etc.)
-
+        // TODO arr[i].getNumber geht hier auch durch
         return getTracingState(goal).isNextTraceElementACall();
     }
 
