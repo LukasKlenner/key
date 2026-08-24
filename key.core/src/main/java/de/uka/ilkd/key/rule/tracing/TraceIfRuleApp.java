@@ -10,7 +10,6 @@ import de.uka.ilkd.key.logic.TermServices;
 import de.uka.ilkd.key.proof.Goal;
 import de.uka.ilkd.key.proof.tracing.TraceElement;
 import de.uka.ilkd.key.proof.tracing.TracingState;
-import de.uka.ilkd.key.rule.AbstractBuiltInRuleApp;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.key_project.prover.sequent.PosInOccurrence;
@@ -18,7 +17,7 @@ import org.key_project.util.collection.ImmutableList;
 
 
 @NullMarked
-public class TraceIfRuleApp extends AbstractBuiltInRuleApp<TraceIfRule> {
+public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
 
     private final TermServices services;
 

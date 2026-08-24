@@ -105,6 +105,21 @@ public final class MethodCall extends ProgramTransformer {
      * @param result the SchemaVariable that is used to keep the result
      * @param body the ProgramElement contained by the meta construct
      */
+    public MethodCall(ProgramVariable result, ProgramElement body, ExecutionContext ec) {
+        super(new Name("method-call"), body);
+        this.pvar = result;
+        this.execContext = ec;
+        this.resultVar = null;
+        this.execContextSV = null;
+        this.targetMethodId = null;
+    }
+
+    /**
+     * creates the methodcall-MetaConstruct
+     *
+     * @param result the SchemaVariable that is used to keep the result
+     * @param body the ProgramElement contained by the meta construct
+     */
     public MethodCall(ProgramSV ec, SchemaVariable result, ProgramSV targetMethodId, ProgramElement body) {
         this(new Name("method-call"), ec, result, targetMethodId, body);
     }
@@ -221,16 +236,18 @@ public final class MethodCall extends ProgramTransformer {
                 .transformImpl(pe, services, svInst);
     }
 
-    private ProgramElement[] transformImpl(ProgramElement pe, Services services,
+    public ProgramElement[] transformImpl(ProgramElement pe, Services services,
             SVInstantiations svInst) {
         LOGGER.trace("method-call: called for {}", pe);
         if (resultVar != null) {
             pvar = (ProgramVariable) svInst.getInstantiation(resultVar);
         }
 
-        execContext =
-            execContextSV == null ? svInst.getContextInstantiation().activeStatementContext()
-                    : (ExecutionContext) svInst.getInstantiation((SchemaVariable) execContextSV);
+        if (execContext == null) {
+            execContext =
+                    execContextSV == null ? svInst.getContextInstantiation().activeStatementContext()
+                            : (ExecutionContext) svInst.getInstantiation((SchemaVariable) execContextSV);
+        }
         methRef = (MethodReference) pe;
 
         ReferencePrefix refPrefix = methRef.getReferencePrefix();

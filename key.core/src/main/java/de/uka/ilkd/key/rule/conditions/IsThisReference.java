@@ -5,13 +5,10 @@ package de.uka.ilkd.key.rule.conditions;
 
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.reference.ThisReference;
-import de.uka.ilkd.key.logic.op.ProgramSV;
-import de.uka.ilkd.key.logic.sort.ProgramSVSort;
 import de.uka.ilkd.key.rule.VariableConditionAdapter;
 import de.uka.ilkd.key.rule.inst.SVInstantiations;
 
 import org.key_project.logic.SyntaxElement;
-import org.key_project.logic.op.ParsableVariable;
 import org.key_project.logic.op.sv.SchemaVariable;
 
 
@@ -21,12 +18,11 @@ import org.key_project.logic.op.sv.SchemaVariable;
 public final class IsThisReference extends VariableConditionAdapter {
 
     private final boolean negated;
-    private final ParsableVariable var;
+    private final SchemaVariable var;
 
-    public IsThisReference(ParsableVariable var, boolean negation) {
+    public IsThisReference(SchemaVariable var, boolean negation) {
         this.negated = negation;
         this.var = var;
-        assert ((ProgramSV) var).sort() == ProgramSVSort.VARIABLE;
     }
 
 

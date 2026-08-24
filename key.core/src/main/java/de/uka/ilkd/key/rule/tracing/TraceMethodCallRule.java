@@ -3,10 +3,11 @@ package de.uka.ilkd.key.rule.tracing;
 import de.uka.ilkd.key.java.JavaTools;
 import de.uka.ilkd.key.java.KeYJavaASTFactory;
 import de.uka.ilkd.key.java.Services;
+import de.uka.ilkd.key.java.ast.ProgramElement;
 import de.uka.ilkd.key.java.ast.SourceElement;
-import de.uka.ilkd.key.java.ast.Statement;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
 import de.uka.ilkd.key.java.ast.expression.Expression;
+import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
 import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
 import de.uka.ilkd.key.java.ast.reference.ArrayReference;
 import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
@@ -28,8 +29,8 @@ import de.uka.ilkd.key.logic.op.ProgramVariable;
 import de.uka.ilkd.key.logic.op.Transformer;
 import de.uka.ilkd.key.logic.op.UpdateApplication;
 import de.uka.ilkd.key.proof.Goal;
-import de.uka.ilkd.key.proof.tracing.AbstractTraceRule;
 import de.uka.ilkd.key.rule.IBuiltInRuleApp;
+import de.uka.ilkd.key.rule.metaconstruct.MethodCall;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.key_project.logic.Name;
@@ -73,6 +74,12 @@ public class TraceMethodCallRule extends AbstractTraceRule {
 
         SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
 
+        if (active instanceof PassiveExpression pe) {
+            active = pe.getChildAt(0);
+        } else {
+            return false;
+        }
+
         // Check if the active statement is a method call
         MethodReference methRef = extractMethodReference(active);
         if (methRef == null) {
@@ -99,6 +106,12 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         IProgramMethod method = methRef.method(services, staticType, execContext);
         if (method == null) {
             return false;
+        }
+
+        // synthetic methods are always allowed
+        // they are not traced but delegated to the normal MethodCall rule
+        if (isUntracedMethod(methRef)) {
+            return true;
         }
 
         // Static methods — no dynamic dispatch
@@ -156,7 +169,7 @@ public class TraceMethodCallRule extends AbstractTraceRule {
 
     // TODO add asumme for concrete Type
     @Override
-    public ImmutableList<Goal> applyImpl(Goal goal, RuleApp ruleApp) {
+    public ImmutableList<Goal> apply(Goal goal, RuleApp ruleApp) {
         TraceMethodCallRuleApp app = (TraceMethodCallRuleApp) ruleApp;
         Services services = goal.proof().getServices();
         TermBuilder tb = services.getTermBuilder();
@@ -173,29 +186,39 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         JTerm progPost = up.second;
 
         // --- Read everything the RuleApp already resolved ---
-        IProgramMethod concreteMethod = app.getResolvedTargetMethod();
         ReferencePrefix receiver = app.getResolvedReceiver();
         MethodReference methRef = app.getMethodReference();
         ProgramVariable resultVar = app.getResultVariable();
 
-        // --- Build the MethodBodyStatement for the concrete type ---
-        // This creates: <concreteType::method>(args)
-        // KeY's existing method_body_expand taclet handles the actual
-        // inlining on the next proof step.
-        Statement mbs = KeYJavaASTFactory.methodBody(
-                resultVar,        // where to store the return value (null for void)
-                receiver,         // the "this" reference
-                concreteMethod,   // the resolved concrete method
-                (ImmutableArray<Expression>) methRef.getArguments()
-        );
+        SourceElement replacement;
+        if (isUntracedMethod(methRef)) {
+            ExecutionContext execContext = extractExecutionContext(services, progPost);
+            // TODO not so hacky
+            ProgramElement[] transformed = new MethodCall(resultVar, methRef, execContext).transformImpl(methRef, services, null);
+            if (transformed.length != 1) {
+                throw new RuleAbortException("Expected exactly one replacement statement for synthetic method call, but got " + transformed.length);
+            }
+            replacement = transformed[0];
+        } else {
+            IProgramMethod concreteMethod = app.getResolvedTargetMethod();
+            // --- Build the MethodBodyStatement for the concrete type ---
+            // This creates: <concreteType::method>(args)
+            // KeY's existing method_body_expand taclet handles the actual
+            // inlining on the next proof step.
+            replacement = KeYJavaASTFactory.methodBody(
+                    resultVar,        // where to store the return value (null for void)
+                    receiver,         // the "this" reference
+                    concreteMethod,   // the resolved concrete method
+                    (ImmutableArray<Expression>) methRef.getArguments()
+            );
+        }
 
         // --- Splice into the JavaBlock ---
         // Get the active statement (the method call to replace)
         SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
 
         // Replace it with the MethodBodyStatement
-        JavaBlock newJb = JavaTools.replaceStatement(
-                progPost.javaBlock(), services, active, mbs);
+        JavaBlock newJb = JavaTools.replaceStatement(progPost.javaBlock(), services, active, replacement);
 
         // --- Rebuild the modality term ---
         var modality = (JModality) progPost.op();
@@ -206,16 +229,15 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         JTerm newGoalFormula = tb.apply(u, newProgPost, null);
 
         // --- Single goal: trust the trace ---
-        ImmutableList<Goal> result = goal.split(1);
-        Goal onlyGoal = result.head();
-        onlyGoal.setBranchLabel("Trace: "
-                //+ concreteMethod.getDeclaringType().getName() + "."
-                + concreteMethod.getName());
-        onlyGoal.changeFormula(
-                new SequentFormula(newGoalFormula),
-                app.posInOccurrence());
+        Goal nextGoal = createNextGoal(goal, !isUntracedMethod(methRef));
+        nextGoal.setBranchLabel("Trace: " + methRef.getName());
+        nextGoal.changeFormula(new SequentFormula(newGoalFormula), app.posInOccurrence());
 
-        return result;
+        return ImmutableList.of(nextGoal);
+    }
+
+    private static boolean isUntracedMethod(MethodReference methRef) {
+        return methRef.getName().startsWith("$");
     }
 
     /**

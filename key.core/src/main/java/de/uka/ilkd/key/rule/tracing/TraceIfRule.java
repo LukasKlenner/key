@@ -16,7 +16,6 @@ import de.uka.ilkd.key.logic.op.JModality;
 import de.uka.ilkd.key.logic.op.Transformer;
 import de.uka.ilkd.key.logic.op.UpdateApplication;
 import de.uka.ilkd.key.proof.Goal;
-import de.uka.ilkd.key.proof.tracing.AbstractTraceRule;
 import de.uka.ilkd.key.rule.IBuiltInRuleApp;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -74,7 +73,7 @@ public class TraceIfRule extends AbstractTraceRule {
     }
 
     @Override
-    public ImmutableList<Goal> applyImpl(Goal goal, RuleApp ruleApp) {
+    public ImmutableList<Goal> apply(Goal goal, RuleApp ruleApp) {
         TraceIfRuleApp app = (TraceIfRuleApp) ruleApp;
         Services services = goal.proof().getServices();
         TermBuilder tb = services.getTermBuilder();
@@ -100,17 +99,17 @@ public class TraceIfRule extends AbstractTraceRule {
         JTerm newProgPost = tb.prog(modality.kind(), newJb, progPost.sub(0));
         JTerm newGoalFormula = tb.apply(u, newProgPost, null);
 
-        ImmutableList<Goal> result = goal.split(1);
-        Goal onlyGoal = result.head();
-        onlyGoal.setBranchLabel("Trace: " + (app.isThenBranch() ? "if-then" : "if-else"));
-        onlyGoal.changeFormula(
+        Goal nextGoal = createNextGoal(goal);
+        nextGoal.setBranchLabel("Trace: " + (app.isThenBranch() ? "if-then" : "if-else"));
+        nextGoal.changeFormula(
                 new SequentFormula(newGoalFormula),
-                app.posInOccurrence());
+                app.posInOccurrence()
+        );
 
-        addGuardAssumption(onlyGoal, ifStmt.getExpression(), app.isThenBranch(),
+        addGuardAssumption(nextGoal, ifStmt.getExpression(), app.isThenBranch(),
                 services, progPost);
 
-        return result;
+        return ImmutableList.of(nextGoal);
     }
 
     private void addGuardAssumption(Goal goal, Expression guard, boolean isTrue,

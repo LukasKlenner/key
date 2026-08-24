@@ -5,6 +5,7 @@
 
  import de.uka.ilkd.key.java.JavaTools;
  import de.uka.ilkd.key.java.Services;
+ import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
  import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
  import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
  import de.uka.ilkd.key.java.ast.reference.FieldReference;
@@ -20,7 +21,6 @@
  import de.uka.ilkd.key.proof.tracing.FunctionDatabase;
  import de.uka.ilkd.key.proof.tracing.TraceElement;
  import de.uka.ilkd.key.proof.tracing.TracingState;
- import de.uka.ilkd.key.rule.AbstractBuiltInRuleApp;
  import org.jspecify.annotations.NullMarked;
  import org.jspecify.annotations.Nullable;
  import org.key_project.prover.sequent.PosInOccurrence;
@@ -31,7 +31,7 @@
  import static de.uka.ilkd.key.rule.tracing.TraceMethodCallRule.extractExecutionContext;
 
  @NullMarked
- public class TraceMethodCallRuleApp extends AbstractBuiltInRuleApp<TraceMethodCallRule> {
+ public class TraceMethodCallRuleApp extends AbstractTraceRuleApp<TraceMethodCallRule> {
 
      private final TermServices services;
 
@@ -70,9 +70,16 @@
       */
      @Override
      public boolean complete() {
-         return methodReference != null &&
-                 resolvedReceiver != null &&
-                 resolvedTargetMethod != null;
+
+         if (methodReference == null || executionContext == null || resolvedReceiver == null) {
+             return false;
+         }
+
+         if (methodReference.getName().startsWith("$")) {
+             return true;
+         }
+
+         return resolvedTargetMethod != null;
      }
 
      // ========================================================================
@@ -91,6 +98,11 @@
 
          this.executionContext = extractExecutionContext(services, programTerm());
          this.resolvedReceiver = resolveReceiver(services);
+
+         if (methodReference.getName().startsWith("$")) {
+             return this;
+         }
+
          this.resolvedTargetMethod = resolveTargetMethod(services);
 
          return this;
@@ -107,6 +119,12 @@
          }
 
          var activeStatement = JavaTools.getActiveStatement(progPost.javaBlock());
+
+         if (activeStatement instanceof PassiveExpression pe) {
+             activeStatement = pe.getChildAt(0);
+         } else {
+             return;
+         }
 
          // Shape 1: obj.m(args)  — active statement is a MethodReference
          if (activeStatement instanceof MethodReference mr) {

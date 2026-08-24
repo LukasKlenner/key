@@ -1,10 +1,9 @@
-package de.uka.ilkd.key.proof.tracing;
+package de.uka.ilkd.key.rule.tracing;
 
 import de.uka.ilkd.key.proof.Goal;
+import de.uka.ilkd.key.proof.tracing.TracingState;
 import de.uka.ilkd.key.rule.BuiltInRule;
 import org.jspecify.annotations.NullMarked;
-import org.key_project.prover.rules.RuleApp;
-import org.key_project.util.collection.ImmutableList;
 
 @NullMarked
 public abstract class AbstractTraceRule implements BuiltInRule {
@@ -14,14 +13,17 @@ public abstract class AbstractTraceRule implements BuiltInRule {
         return false;
     }
 
-    @Override
-    public ImmutableList<Goal> apply(Goal goal, RuleApp ruleApp) {
-        ImmutableList<Goal> result = applyImpl(goal, ruleApp);
-        getTracingState(goal).continueTrace();
-        return result;
+    protected Goal createNextGoal(Goal currentGoal) {
+        return createNextGoal(currentGoal, true);
     }
 
-    public abstract ImmutableList<Goal> applyImpl(Goal goal, RuleApp ruleApp);
+    protected Goal createNextGoal(Goal currentGoal, boolean continueTrace) {
+        Goal nextGoal = currentGoal.split(1).head();
+        if (continueTrace) {
+            getTracingState(nextGoal).continueTrace();
+        }
+        return nextGoal;
+    }
 
     protected TracingState getTracingState(Goal goal) {
         TracingState tracingState = goal.proof().getServices().getTracingState();
