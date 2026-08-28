@@ -29,6 +29,8 @@
  import java.util.Objects;
 
  import static de.uka.ilkd.key.rule.tracing.TraceMethodCallRule.extractExecutionContext;
+ import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getStaticReferencedMethod;
+ import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.isUntracedMethod;
 
  @NullMarked
  public class TraceMethodCallRuleApp extends AbstractTraceRuleApp<TraceMethodCallRule> {
@@ -39,6 +41,7 @@
      private @Nullable MethodReference methodReference;
      private @Nullable ProgramVariable resultVariable;
      private @Nullable ExecutionContext executionContext;
+     private @Nullable IProgramMethod staticReferencedMethod;
 
      // --- Resolved ---
      private @Nullable ReferencePrefix resolvedReceiver;
@@ -71,11 +74,11 @@
      @Override
      public boolean complete() {
 
-         if (methodReference == null || executionContext == null || resolvedReceiver == null) {
+         if (methodReference == null || executionContext == null || resolvedReceiver == null || staticReferencedMethod == null) {
              return false;
          }
 
-         if (methodReference.getName().startsWith("$")) {
+         if (isUntracedMethod(staticReferencedMethod)) {
              return true;
          }
 
@@ -99,7 +102,8 @@
          this.executionContext = extractExecutionContext(services, programTerm());
          this.resolvedReceiver = resolveReceiver(services);
 
-         if (methodReference.getName().startsWith("$")) {
+         this.staticReferencedMethod = getStaticReferencedMethod(methodReference, services, executionContext);
+         if (this.staticReferencedMethod == null || isUntracedMethod(this.staticReferencedMethod)) {
              return this;
          }
 
@@ -219,8 +223,8 @@
          return Objects.requireNonNull(executionContext);
      }
 
-     public IProgramMethod getResolvedTargetMethod() {
-         return Objects.requireNonNull(resolvedTargetMethod);
+     public @Nullable IProgramMethod getResolvedTargetMethod() {
+         return resolvedTargetMethod;
      }
 
      public ReferencePrefix getResolvedReceiver() {

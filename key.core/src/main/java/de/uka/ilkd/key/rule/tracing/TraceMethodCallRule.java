@@ -5,19 +5,13 @@ import de.uka.ilkd.key.java.KeYJavaASTFactory;
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.ProgramElement;
 import de.uka.ilkd.key.java.ast.SourceElement;
-import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
 import de.uka.ilkd.key.java.ast.expression.Expression;
 import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
 import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
-import de.uka.ilkd.key.java.ast.reference.ArrayReference;
 import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
-import de.uka.ilkd.key.java.ast.reference.FieldReference;
 import de.uka.ilkd.key.java.ast.reference.MethodReference;
 import de.uka.ilkd.key.java.ast.reference.ReferencePrefix;
 import de.uka.ilkd.key.java.ast.reference.SuperReference;
-import de.uka.ilkd.key.java.ast.reference.ThisReference;
-import de.uka.ilkd.key.java.ast.reference.TypeRef;
-import de.uka.ilkd.key.java.ast.reference.TypeReference;
 import de.uka.ilkd.key.java.ast.statement.MethodFrame;
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.logic.JavaBlock;
@@ -41,6 +35,9 @@ import org.key_project.prover.sequent.SequentFormula;
 import org.key_project.util.collection.ImmutableArray;
 import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.Pair;
+
+import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getStaticReferencedMethod;
+import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.isUntracedMethod;
 
 @NullMarked
 public class TraceMethodCallRule extends AbstractTraceRule {
@@ -98,34 +95,22 @@ public class TraceMethodCallRule extends AbstractTraceRule {
             return false;
         }
 
-        KeYJavaType staticType = getStaticPrefixType(
-                methRef.getReferencePrefix(),
+        IProgramMethod method = getStaticReferencedMethod(
+                methRef,
                 services,
                 execContext
         );
-        IProgramMethod method = methRef.method(services, staticType, execContext);
+
         if (method == null) {
             return false;
         }
 
-        // synthetic methods are always allowed
+        // untraced methods are always allowed
         // they are not traced but delegated to the normal MethodCall rule
-        if (isUntracedMethod(methRef)) {
+        if (isUntracedMethod(method)) {
             return true;
         }
 
-        // Static methods — no dynamic dispatch
-        if (method.isStatic()) {
-            return false;
-        }
-
-        // Private methods and constructors — statically bound
-        if (method.isPrivate()) {
-            return false;
-        }
-
-        // TODO add whitelist for methodsCall that are not traced (e.g., createArrayHelper, etc.)
-        // TODO arr[i].getNumber geht hier auch durch
         return getTracingState(goal).isNextTraceElementACall();
     }
 
@@ -189,9 +174,10 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         ReferencePrefix receiver = app.getResolvedReceiver();
         MethodReference methRef = app.getMethodReference();
         ProgramVariable resultVar = app.getResultVariable();
+        IProgramMethod concreteMethod = app.getResolvedTargetMethod();
 
         SourceElement replacement;
-        if (isUntracedMethod(methRef)) {
+        if (concreteMethod == null) {
             ExecutionContext execContext = extractExecutionContext(services, progPost);
             // TODO not so hacky
             ProgramElement[] transformed = new MethodCall(resultVar, methRef, execContext).transformImpl(methRef, services, null);
@@ -200,7 +186,6 @@ public class TraceMethodCallRule extends AbstractTraceRule {
             }
             replacement = transformed[0];
         } else {
-            IProgramMethod concreteMethod = app.getResolvedTargetMethod();
             // --- Build the MethodBodyStatement for the concrete type ---
             // This creates: <concreteType::method>(args)
             // KeY's existing method_body_expand taclet handles the actual
@@ -229,47 +214,11 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         JTerm newGoalFormula = tb.apply(u, newProgPost, null);
 
         // --- Single goal: trust the trace ---
-        Goal nextGoal = createNextGoal(goal, !isUntracedMethod(methRef));
+        Goal nextGoal = createNextGoal(goal, concreteMethod != null);
         nextGoal.setBranchLabel("Trace: " + methRef.getName());
         nextGoal.changeFormula(new SequentFormula(newGoalFormula), app.posInOccurrence());
 
         return ImmutableList.of(nextGoal);
-    }
-
-    private static boolean isUntracedMethod(MethodReference methRef) {
-        return methRef.getName().startsWith("$");
-    }
-
-    /**
-     * Determines the static prefix type from the reference prefix,
-     * mirroring {@code MethodCall.getStaticPrefixType}.
-     */
-    private @Nullable KeYJavaType getStaticPrefixType(
-            @Nullable ReferencePrefix refPrefix,
-            Services services,
-            ExecutionContext executionContext
-    ) {
-        if (refPrefix == null
-                || (refPrefix instanceof ThisReference
-                && refPrefix.getReferencePrefix() == null)) {
-            return executionContext.getTypeReference().getKeYJavaType();
-        } else if (refPrefix instanceof ThisReference) {
-            return ((TypeReference) refPrefix.getReferencePrefix()).getKeYJavaType();
-        } else if (refPrefix instanceof TypeRef tr) {
-            return tr.getKeYJavaType();
-        } else if (refPrefix instanceof ProgramVariable pv) {
-            return pv.getKeYJavaType();
-        } else if (refPrefix instanceof FieldReference fr) {
-            return fr.getProgramVariable().getKeYJavaType();
-        } else if (refPrefix instanceof ArrayReference ar) {
-            return ar.getKeYJavaType(services, executionContext);
-        } else if (refPrefix instanceof SuperReference) {
-            return services.getJavaInfo().getSuperclass(
-                    executionContext.getTypeReference().getKeYJavaType());
-        } else {
-            throw new IllegalArgumentException(
-                    "Unsupported reference prefix: " + refPrefix.getClass());
-        }
     }
 
     @Override
