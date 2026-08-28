@@ -13,9 +13,29 @@ import de.uka.ilkd.key.java.ast.reference.TypeRef;
 import de.uka.ilkd.key.java.ast.reference.TypeReference;
 import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.logic.op.ProgramVariable;
+import de.uka.ilkd.key.logic.op.Transformer;
+import de.uka.ilkd.key.proof.Goal;
+import de.uka.ilkd.key.proof.tracing.TracingState;
 import org.jspecify.annotations.Nullable;
+import org.key_project.prover.sequent.PosInOccurrence;
 
 public class TracingRuleUtil {
+
+    public static TracingState getTracingState(Goal goal) {
+        return getTracingState(goal.proof().getServices());
+    }
+
+    public static TracingState getTracingState(Services services) {
+        TracingState tracingState = services.getTracingState();
+        if (tracingState == null) {
+            throw new IllegalStateException("TracingState is not available");
+        }
+        return tracingState;
+    }
+
+    public static boolean isPioApplicable(@Nullable PosInOccurrence pio) {
+        return pio != null && pio.isTopLevel() && !pio.isInAntec() && !Transformer.inTransformer(pio);
+    }
 
     public static boolean isUntracedMethod(IProgramMethod method) {
         return method.getName().startsWith("$") || method.isStatic() || method.isPrivate();

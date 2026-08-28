@@ -26,6 +26,10 @@ public class TracingState {
         return getNextTraceElement() instanceof TraceElement.Call;
     }
 
+    public boolean isNextTraceElementACatch() {
+        return getNextTraceElement() instanceof TraceElement.Catch;
+    }
+
     public boolean isNextTraceElementAnIfOrElse() {
         TraceElement next = getNextTraceElement();
         return next instanceof TraceElement.If || next instanceof TraceElement.Else;

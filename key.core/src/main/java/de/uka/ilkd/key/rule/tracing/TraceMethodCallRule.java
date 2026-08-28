@@ -20,8 +20,6 @@ import de.uka.ilkd.key.logic.TermServices;
 import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.logic.op.JModality;
 import de.uka.ilkd.key.logic.op.ProgramVariable;
-import de.uka.ilkd.key.logic.op.Transformer;
-import de.uka.ilkd.key.logic.op.UpdateApplication;
 import de.uka.ilkd.key.proof.Goal;
 import de.uka.ilkd.key.rule.IBuiltInRuleApp;
 import de.uka.ilkd.key.rule.metaconstruct.MethodCall;
@@ -53,24 +51,7 @@ public class TraceMethodCallRule extends AbstractTraceRule {
     }
 
     @Override
-    public boolean isApplicable(Goal goal, @Nullable PosInOccurrence pio) {
-        if (pio == null || !pio.isTopLevel() || pio.isInAntec()) {
-            return false;
-        }
-        if (Transformer.inTransformer(pio)) {
-            return false;
-        }
-
-        Services services = goal.proof().getServices();
-        Pair<JTerm, JTerm> up = applyUpdates((JTerm) pio.subTerm(), services);
-        JTerm progPost = up.second;
-
-        if (!(progPost.op() instanceof JModality)) {
-            return false;
-        }
-
-        SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
-
+    public boolean isApplicableImpl(SourceElement active, JavaBlock javaBlock, Services services) {
         if (active instanceof PassiveExpression pe) {
             active = pe.getChildAt(0);
         } else {
@@ -84,13 +65,13 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         }
 
         // Super calls are statically resolved — no dynamic dispatch
+        // TODO ist das korrekt? Vermutlich einfach weg
         if (methRef.getReferencePrefix() instanceof SuperReference) {
             return false;
         }
 
         // Resolve the method on the static type
-        ExecutionContext execContext = extractExecutionContext(services, progPost);
-
+        ExecutionContext execContext = extractExecutionContext(services, javaBlock);
         if (execContext == null) {
             return false;
         }
@@ -100,7 +81,6 @@ public class TraceMethodCallRule extends AbstractTraceRule {
                 services,
                 execContext
         );
-
         if (method == null) {
             return false;
         }
@@ -111,7 +91,7 @@ public class TraceMethodCallRule extends AbstractTraceRule {
             return true;
         }
 
-        return getTracingState(goal).isNextTraceElementACall();
+        return getTracingState(services).isNextTraceElementACall();
     }
 
     private static @Nullable MethodReference extractMethodReference(
@@ -129,22 +109,13 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         return null;
     }
 
-    static @Nullable ExecutionContext extractExecutionContext(Services services, JTerm progPost) {
+    static @Nullable ExecutionContext extractExecutionContext(Services services, JavaBlock javaBlock) {
         MethodFrame innermostFrame =
-                JavaTools.getInnermostMethodFrame(progPost.javaBlock(), services);
+                JavaTools.getInnermostMethodFrame(javaBlock, services);
         if (innermostFrame != null) {
             return (ExecutionContext) innermostFrame.getExecutionContext();
         }
         return null;
-    }
-
-    private static Pair<JTerm, JTerm> applyUpdates(JTerm focusTerm, TermServices services) {
-        if (focusTerm.op() instanceof UpdateApplication) {
-            return new Pair<>(UpdateApplication.getUpdate(focusTerm),
-                    UpdateApplication.getTarget(focusTerm));
-        } else {
-            return new Pair<>(services.getTermBuilder().skip(), focusTerm);
-        }
     }
 
     @Override
@@ -178,7 +149,7 @@ public class TraceMethodCallRule extends AbstractTraceRule {
 
         SourceElement replacement;
         if (concreteMethod == null) {
-            ExecutionContext execContext = extractExecutionContext(services, progPost);
+            ExecutionContext execContext = extractExecutionContext(services, progPost.javaBlock());
             // TODO not so hacky
             ProgramElement[] transformed = new MethodCall(resultVar, methRef, execContext).transformImpl(methRef, services, null);
             if (transformed.length != 1) {

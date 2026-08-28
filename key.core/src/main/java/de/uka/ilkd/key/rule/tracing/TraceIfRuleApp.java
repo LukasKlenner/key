@@ -1,19 +1,18 @@
 package de.uka.ilkd.key.rule.tracing;
 
 import de.uka.ilkd.key.java.JavaTools;
-import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.Statement;
 import de.uka.ilkd.key.java.ast.statement.If;
 import de.uka.ilkd.key.logic.JTerm;
-import de.uka.ilkd.key.logic.TermBuilder;
 import de.uka.ilkd.key.logic.TermServices;
 import de.uka.ilkd.key.proof.Goal;
 import de.uka.ilkd.key.proof.tracing.TraceElement;
-import de.uka.ilkd.key.proof.tracing.TracingState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.key_project.prover.sequent.PosInOccurrence;
 import org.key_project.util.collection.ImmutableList;
+
+import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getTracingState;
 
 
 @NullMarked
@@ -23,7 +22,6 @@ public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
 
     private @Nullable Statement resolvedBranchBody;
     private boolean thenBranch;
-    private boolean resolved;
 
     public TraceIfRuleApp(TraceIfRule rule, @Nullable PosInOccurrence pos,
                           TermServices services) {
@@ -39,13 +37,11 @@ public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
 
     @Override
     public boolean complete() {
-        return resolved;
+        return resolvedBranchBody != null;
     }
 
     @Override
     public TraceIfRuleApp tryToInstantiate(Goal goal) {
-        final Services services = goal.proof().getServices();
-
         JTerm progPost = programTerm();
         if (progPost == null) {
             return this;
@@ -56,30 +52,19 @@ public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
             return this;
         }
 
-        TracingState tracingState = services.getTracingState();
-        TraceElement next = tracingState.getNextTraceElement();
+        TraceElement next = getTracingState(goal).getNextTraceElement();
 
         if (next instanceof TraceElement.If) {
             this.thenBranch = true;
             this.resolvedBranchBody = ifStmt.getThen().getBody();
-            this.resolved = true;
         } else if (next instanceof TraceElement.Else) {
             this.thenBranch = false;
             // null body when there's no else branch — the if is simply removed
             this.resolvedBranchBody = ifStmt.getElse() != null
                     ? ifStmt.getElse().getBody() : null;
-            this.resolved = true;
         }
 
         return this;
-    }
-
-    public @Nullable JTerm programTerm() {
-        if (posInOccurrence() != null) {
-            return TermBuilder.goBelowUpdates(
-                    (JTerm) posInOccurrence().subTerm());
-        }
-        return null;
     }
 
     public @Nullable Statement getResolvedBranchBody() {

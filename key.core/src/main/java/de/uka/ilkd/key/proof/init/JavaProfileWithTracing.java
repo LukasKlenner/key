@@ -6,6 +6,7 @@ import de.uka.ilkd.key.rule.LoopScopeInvariantRule;
 import de.uka.ilkd.key.rule.WhileInvariantRule;
 import de.uka.ilkd.key.rule.tracing.TraceIfRule;
 import de.uka.ilkd.key.rule.tracing.TraceMethodCallRule;
+import de.uka.ilkd.key.rule.tracing.TraceThrowCatchRule;
 import org.key_project.util.collection.ImmutableList;
 
 public class JavaProfileWithTracing extends JavaProfile {
@@ -51,6 +52,7 @@ public class JavaProfileWithTracing extends JavaProfile {
         // must stay at the front of list according to comment in JavaProfile.initBuiltInRules()
         BuiltInRule first = builtInRules.get(0);
         return builtInRules.removeFirst(first)
+                .prepend(TraceThrowCatchRule.INSTANCE)
                 .prepend(TraceMethodCallRule.INSTANCE)
                 .prepend(TraceIfRule.INSTANCE)
                 .prepend(first);

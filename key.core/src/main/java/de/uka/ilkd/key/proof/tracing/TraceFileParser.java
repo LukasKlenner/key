@@ -39,16 +39,8 @@ public class TraceFileParser {
                     elements.add(new TraceElement.Else());
                     i++;
                 }
-                case 'R' -> {
+                case 'R', 'T', 'U' -> {
                     // ignored by key
-                    i++;
-                }
-                case 'T' -> {
-                    elements.add(new TraceElement.Try());
-                    i++;
-                }
-                case 'U' -> {
-                    elements.add(new TraceElement.TryEnd());
                     i++;
                 }
                 case 'J' -> {

@@ -38,24 +38,7 @@ public class TraceIfRule extends AbstractTraceRule {
     }
 
     @Override
-    public boolean isApplicable(Goal goal, @Nullable PosInOccurrence pio) {
-        if (pio == null || !pio.isTopLevel() || pio.isInAntec()) {
-            return false;
-        }
-        if (Transformer.inTransformer(pio)) {
-            return false;
-        }
-
-        Services services = goal.proof().getServices();
-        Pair<JTerm, JTerm> up = applyUpdates((JTerm) pio.subTerm(), services);
-        JTerm progPost = up.second;
-
-        if (!(progPost.op() instanceof JModality)) {
-            return false;
-        }
-
-        SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
-
+    public boolean isApplicableImpl(SourceElement active, JavaBlock javaBlock, Services services) {
         if (!(active instanceof If ifStmt)) {
             return false;
         }
@@ -64,7 +47,7 @@ public class TraceIfRule extends AbstractTraceRule {
             return false;
         }
 
-        return getTracingState(goal).isNextTraceElementAnIfOrElse();
+        return getTracingState(services).isNextTraceElementAnIfOrElse();
     }
 
     @Override
@@ -85,7 +68,7 @@ public class TraceIfRule extends AbstractTraceRule {
 
         JTerm focusTerm = (JTerm) app.posInOccurrence().subTerm();
         Pair<JTerm, JTerm> up = applyUpdates(focusTerm, services);
-        JTerm u = up.first;
+        JTerm update = up.first;
         JTerm progPost = up.second;
 
         SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
@@ -97,7 +80,7 @@ public class TraceIfRule extends AbstractTraceRule {
 
         var modality = (JModality) progPost.op();
         JTerm newProgPost = tb.prog(modality.kind(), newJb, progPost.sub(0));
-        JTerm newGoalFormula = tb.apply(u, newProgPost, null);
+        JTerm newGoalFormula = tb.apply(update, newProgPost, null);
 
         Goal nextGoal = createNextGoal(goal);
         nextGoal.setBranchLabel("Trace: " + (app.isThenBranch() ? "if-then" : "if-else"));
@@ -114,7 +97,7 @@ public class TraceIfRule extends AbstractTraceRule {
 
     private void addGuardAssumption(Goal goal, Expression guard, boolean isTrue,
             Services services, JTerm progPost) {
-        ExecutionContext ec = TraceMethodCallRule.extractExecutionContext(services, progPost);
+        ExecutionContext ec = TraceMethodCallRule.extractExecutionContext(services, progPost.javaBlock());
         JTerm guardTerm = services.getTypeConverter().convertToLogicElement(guard, ec);
         TermBuilder tb = services.getTermBuilder();
         JTerm boolTerm = isTrue
@@ -122,15 +105,6 @@ public class TraceIfRule extends AbstractTraceRule {
                 : services.getTypeConverter().getBooleanLDT().getFalseTerm();
         JTerm assumption = tb.equals(guardTerm, boolTerm);
         goal.addFormula(new SequentFormula(assumption), true, false);
-    }
-
-    private static Pair<JTerm, JTerm> applyUpdates(JTerm focusTerm, TermServices services) {
-        if (focusTerm.op() instanceof UpdateApplication) {
-            return new Pair<>(UpdateApplication.getUpdate(focusTerm),
-                    UpdateApplication.getTarget(focusTerm));
-        } else {
-            return new Pair<>(services.getTermBuilder().skip(), focusTerm);
-        }
     }
 
     @Override

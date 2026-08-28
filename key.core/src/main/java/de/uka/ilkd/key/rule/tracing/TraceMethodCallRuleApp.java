@@ -47,10 +47,6 @@
      private @Nullable ReferencePrefix resolvedReceiver;
      private @Nullable IProgramMethod resolvedTargetMethod;
 
-     // ========================================================================
-     // Constructors
-     // ========================================================================
-
      public TraceMethodCallRuleApp(TraceMethodCallRule rule, @Nullable PosInOccurrence pos,
                                    TermServices services) {
          this(rule, pos, null, services);
@@ -62,10 +58,6 @@
          super(rule, pos, ifInsts);
          this.services = services;
      }
-
-     // ========================================================================
-     // Completeness
-     // ========================================================================
 
      /**
       * The rule app is complete when we have successfully resolved a concrete
@@ -99,7 +91,7 @@
              return this;
          }
 
-         this.executionContext = extractExecutionContext(services, programTerm());
+         this.executionContext = extractExecutionContext(services, programTerm().javaBlock());
          this.resolvedReceiver = resolveReceiver(services);
 
          this.staticReferencedMethod = getStaticReferencedMethod(methodReference, services, executionContext);
@@ -192,25 +184,6 @@
          return null;
      }
 
-     // ========================================================================
-     // Term access
-     // ========================================================================
-
-     /**
-      * Returns the program term (below updates) at the focus position.
-      */
-     public @Nullable JTerm programTerm() {
-         if (posInOccurrence() != null) {
-             return TermBuilder.goBelowUpdates(
-                     (JTerm) posInOccurrence().subTerm());
-         }
-         return null;
-     }
-
-     // ========================================================================
-     // Accessors for the Rule
-     // ========================================================================
-
      public MethodReference getMethodReference() {
          return Objects.requireNonNull(methodReference);
      }
@@ -230,11 +203,6 @@
      public ReferencePrefix getResolvedReceiver() {
          return Objects.requireNonNull(resolvedReceiver);
      }
-
-
-     // ========================================================================
-     // AbstractBuiltInRuleApp overrides
-     // ========================================================================
 
      @Override
      public TraceMethodCallRuleApp replacePos(PosInOccurrence newPos) {
