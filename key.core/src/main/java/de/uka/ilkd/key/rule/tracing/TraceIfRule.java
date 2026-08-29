@@ -27,6 +27,8 @@ import org.key_project.prover.sequent.SequentFormula;
 import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.Pair;
 
+import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getTracingState;
+
 @NullMarked
 public class TraceIfRule extends AbstractTraceRule {
 
@@ -43,6 +45,8 @@ public class TraceIfRule extends AbstractTraceRule {
             return false;
         }
 
+        // TODO braucht man das wirklich? Wenn trace sagt nächster Schritt is ein throw dann sollte alles done sein, oder?
+        // Oder kann es noch weitere seiteneffekte ohne tracing haben?
         if (!ProgramSVSort.SIMPLEEXPRESSION.canStandFor(ifStmt.getExpression(), null, services)) {
             return false;
         }

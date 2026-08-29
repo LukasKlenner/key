@@ -1,7 +1,9 @@
 package de.uka.ilkd.key.rule.tracing;
 
 import de.uka.ilkd.key.java.Services;
+import de.uka.ilkd.key.java.ast.ProgramElement;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
+import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
 import de.uka.ilkd.key.java.ast.reference.ArrayReference;
 import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
 import de.uka.ilkd.key.java.ast.reference.FieldReference;
@@ -11,6 +13,8 @@ import de.uka.ilkd.key.java.ast.reference.SuperReference;
 import de.uka.ilkd.key.java.ast.reference.ThisReference;
 import de.uka.ilkd.key.java.ast.reference.TypeRef;
 import de.uka.ilkd.key.java.ast.reference.TypeReference;
+import de.uka.ilkd.key.java.ast.statement.Throw;
+import de.uka.ilkd.key.java.ast.statement.Try;
 import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.logic.op.ProgramVariable;
 import de.uka.ilkd.key.logic.op.Transformer;
@@ -20,6 +24,32 @@ import org.jspecify.annotations.Nullable;
 import org.key_project.prover.sequent.PosInOccurrence;
 
 public class TracingRuleUtil {
+
+    public static @Nullable Throw getThrowStatement(Try tryStatement) {
+        if (tryStatement == null) {
+            return null;
+        }
+
+        if (tryStatement.getBody().isEmpty()) {
+            return null;
+        }
+
+        ProgramElement firstStatement = tryStatement.getBody().getStatementAt(0);
+
+        if (firstStatement instanceof PassiveExpression pe) {
+            firstStatement = pe.getChildAt(0);
+        }
+
+        if (!(firstStatement instanceof Throw throwStmt)) {
+            return null;
+        }
+
+        if (!(throwStmt.getExpressionAt(0) instanceof PassiveExpression)) {
+            return null;
+        }
+
+        return throwStmt;
+    }
 
     public static TracingState getTracingState(Goal goal) {
         return getTracingState(goal.proof().getServices());

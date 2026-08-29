@@ -36,11 +36,6 @@ public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
     }
 
     @Override
-    public boolean complete() {
-        return resolvedBranchBody != null;
-    }
-
-    @Override
     public TraceIfRuleApp tryToInstantiate(Goal goal) {
         JTerm progPost = programTerm();
         if (progPost == null) {

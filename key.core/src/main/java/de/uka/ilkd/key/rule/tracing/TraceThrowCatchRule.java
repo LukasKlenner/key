@@ -2,6 +2,7 @@ package de.uka.ilkd.key.rule.tracing;
 
 import de.uka.ilkd.key.java.JavaTools;
 import de.uka.ilkd.key.java.Services;
+import de.uka.ilkd.key.java.ast.ProgramElement;
 import de.uka.ilkd.key.java.ast.SourceElement;
 import de.uka.ilkd.key.java.ast.Statement;
 import de.uka.ilkd.key.java.ast.declaration.LocalVariableDeclaration;
@@ -11,6 +12,7 @@ import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
 import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
 import de.uka.ilkd.key.java.ast.statement.Catch;
 import de.uka.ilkd.key.java.ast.statement.Throw;
+import de.uka.ilkd.key.java.ast.statement.Try;
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.logic.JavaBlock;
 import de.uka.ilkd.key.logic.TermBuilder;
@@ -24,11 +26,13 @@ import org.jspecify.annotations.Nullable;
 import org.key_project.logic.Name;
 import org.key_project.prover.rules.RuleApp;
 import org.key_project.prover.sequent.PosInOccurrence;
+import org.key_project.prover.sequent.SequentFormula;
 import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.Pair;
 
 import java.util.List;
 
+import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getThrowStatement;
 import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getTracingState;
 
 @NullMarked
@@ -46,20 +50,13 @@ public class TraceThrowCatchRule extends AbstractTraceRule {
 
     @Override
     public boolean isApplicableImpl(SourceElement active, JavaBlock javaBlock, Services services) {
-        if (active instanceof PassiveExpression pe) {
-            active = pe.getChildAt(0);
-        } else {
+        if (!(active instanceof Try tryStatement)) {
             return false;
         }
 
-        if (!(active instanceof Throw throwStmt)) {
-            return false;
-        }
+        Throw throwStmt = getThrowStatement(tryStatement);
 
-        // TODO braucht man das wirklich? Wenn trace sagt nächster Schritt is ein throw dann sollte alles done sein, oder?
-        // Oder kann es noch weitere seiteneffekte ohne tracing haben?
-        // Gleiches bie TraceIfRule
-        if (!ProgramSVSort.SIMPLEEXPRESSION.canStandFor(throwStmt.getExpression(), null, services)) {
+        if (throwStmt == null) {
             return false;
         }
 
@@ -77,30 +74,43 @@ public class TraceThrowCatchRule extends AbstractTraceRule {
         Services services = goal.proof().getServices();
         TermBuilder tb = services.getTermBuilder();
 
+        // --- Extract focus term and leading update ---
         JTerm focusTerm = (JTerm) app.posInOccurrence().subTerm();
         Pair<JTerm, JTerm> up = applyUpdates(focusTerm, services);
         JTerm update = up.first;
         JTerm progPost = up.second;
 
-        Throw throwStmt = (Throw) JavaTools.getActiveStatement(progPost.javaBlock());
+        // --- Extract context ---
+        Try tryStatement = (Try) JavaTools.getActiveStatement(progPost.javaBlock());
+        Throw throwStmt = getThrowStatement(tryStatement);
+        if (throwStmt == null) {
+            throw new IllegalStateException("No throw statement found");
+        }
+
         Catch resolvedCatch = app.getResolvedCatch();
         List<Statement> catchStatement = (List<Statement>) resolvedCatch.getBody().getBody().toList();
 
+        // Replace the try statement with the resolved catch body
         JavaBlock newJb = JavaTools.replaceStatement(
-                progPost.javaBlock(), services, , branchBody);
+                progPost.javaBlock(), services, tryStatement, resolvedCatch.getBody());
 
+        // --- Rebuild the modality term ---
         var modality = (JModality) progPost.op();
         JTerm newProgPost = tb.prog(modality.kind(), newJb, progPost.sub(0));
-        JTerm newGoalFormula = tb.apply(update, newProgPost, null);1
+
+
+        // --- Re-apply the leading update ---
+        JTerm newGoalFormula = tb.apply(update, newProgPost, null);
 
         ParameterDeclaration catchParam = resolvedCatch.getParameterDeclaration();
 //        catchStatement.addFirst(new CopyAssignment(resolvedCatch.getParameterDeclaration(), throwStmt.getExpression()));
 //        catchStatement.addFirst(new LocalVariableDeclaration(catchParam.getModifiers(), catchParam.getTypeReference(), catchParam.getVariableSpecification()));
 
-
-
+        // --- Create the new goal ---
         Goal nextGoal = createNextGoal(goal);
         nextGoal.setBranchLabel("Trace: Throw-Catch");
+        nextGoal.changeFormula(new SequentFormula(newGoalFormula), app.posInOccurrence());
+
         return ImmutableList.of(nextGoal);
     }
 

@@ -1,6 +1,7 @@
 package de.uka.ilkd.key.rule.tracing;
 
 import de.uka.ilkd.key.java.JavaTools;
+import de.uka.ilkd.key.java.ast.SourceElement;
 import de.uka.ilkd.key.java.ast.statement.Catch;
 import de.uka.ilkd.key.java.ast.statement.Throw;
 import de.uka.ilkd.key.java.ast.statement.Try;
@@ -47,9 +48,8 @@ public class TraceThrowCatchRuleApp extends AbstractTraceRuleApp<TraceThrowCatch
             return this;
         }
 
-        var active = JavaTools.getActiveStatement(progPost.javaBlock());
-
-        if (!(active instanceof Throw throwStmt)) {
+        SourceElement active = JavaTools.getActiveStatement(progPost.javaBlock());
+        if (!(active instanceof Try tryStmt)) {
             return this;
         }
 

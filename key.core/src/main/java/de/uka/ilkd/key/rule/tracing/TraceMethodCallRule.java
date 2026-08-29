@@ -35,6 +35,7 @@ import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.Pair;
 
 import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getStaticReferencedMethod;
+import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.getTracingState;
 import static de.uka.ilkd.key.rule.tracing.TracingRuleUtil.isUntracedMethod;
 
 @NullMarked
@@ -129,11 +130,6 @@ public class TraceMethodCallRule extends AbstractTraceRule {
         TraceMethodCallRuleApp app = (TraceMethodCallRuleApp) ruleApp;
         Services services = goal.proof().getServices();
         TermBuilder tb = services.getTermBuilder();
-
-        if (!app.complete()) {
-            throw new RuleAbortException(
-                    "Trace method rule app not fully instantiated");
-        }
 
         // --- Extract focus term and leading update ---
         JTerm focusTerm = (JTerm) app.posInOccurrence().subTerm();
