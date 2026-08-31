@@ -36,6 +36,8 @@ import org.jspecify.annotations.Nullable;
 import org.key_project.prover.sequent.PosInOccurrence;
 import org.key_project.util.collection.Pair;
 
+import static de.uka.ilkd.key.java.JavaTools.getActiveStatement;
+
 public class TracingRuleUtil {
 
     // Modified version of JavaTools.getActiveStatement
@@ -81,7 +83,11 @@ public class TracingRuleUtil {
             return null;
         }
 
-        Statement firstStatement = tryStatement.getBody().getStatementAt(0);
+        SourceElement active = getActiveStatement(tryStatement);
+
+        if (!(active instanceof Statement firstStatement)) {
+            return null;
+        }
 
         if (IsTryInterruptingStatement(firstStatement, services)) {
             return firstStatement;

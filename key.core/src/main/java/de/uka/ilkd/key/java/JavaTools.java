@@ -35,7 +35,13 @@ public final class JavaTools {
     public static SourceElement getActiveStatement(JavaBlock jb) {
         assert jb.program() != null;
 
-        SourceElement result = jb.program().getFirstElement();
+        return getActiveStatement(jb.program().getFirstElement());
+    }
+
+    public static SourceElement getActiveStatement(SourceElement sourceElement) {
+        assert sourceElement != null;
+
+        SourceElement result = sourceElement;
         while ((result instanceof ProgramPrefix || result instanceof CatchAllStatement)
                 && !(result instanceof StatementBlock && ((StatementBlock) result).isEmpty())) {
             if (result instanceof LabeledStatement) {
