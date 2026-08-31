@@ -48,7 +48,7 @@ public class TraceTryRuleApp extends AbstractTraceRuleApp<TraceTryRule> {
 
     @Override
     public boolean complete() {
-        return tryInterruptingStatement != null;
+        return tryStmt != null && (tryStmt.getBody().isEmpty() ||tryInterruptingStatement != null);
     }
 
     @Override

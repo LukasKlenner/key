@@ -68,7 +68,8 @@ public class TracingRuleUtil {
             return null;
         }
 
-        return new Pair<>(lastFoundTry, catchCount - lastFoundTry.getCatchCount());
+        // TODO -1 because of default catch Throwable block of key
+        return new Pair<>(lastFoundTry, catchCount - lastFoundTry.getCatchCount() - 1);
     }
 
     public static @Nullable Statement getTryInterruptingStatement(Try tryStatement, Services services) {

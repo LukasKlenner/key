@@ -146,7 +146,7 @@ public class TraceTryRule extends AbstractTraceRule {
         JTerm newGoalFormula = tb.apply(update, newProgPost, null);
 
         // --- Create the new goal ---
-        Goal nextGoal = createNextGoal(goal);
+        Goal nextGoal = createNextGoal(goal, app.hasThrowStatement());
         nextGoal.setBranchLabel("Trace: Throw-Catch");
         nextGoal.changeFormula(new SequentFormula(newGoalFormula), app.posInOccurrence());
 
