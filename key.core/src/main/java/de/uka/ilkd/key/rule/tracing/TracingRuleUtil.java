@@ -2,7 +2,11 @@ package de.uka.ilkd.key.rule.tracing;
 
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.ProgramElement;
+import de.uka.ilkd.key.java.ast.SourceElement;
+import de.uka.ilkd.key.java.ast.Statement;
+import de.uka.ilkd.key.java.ast.StatementBlock;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
+import de.uka.ilkd.key.java.ast.expression.Expression;
 import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
 import de.uka.ilkd.key.java.ast.reference.ArrayReference;
 import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
@@ -13,19 +17,61 @@ import de.uka.ilkd.key.java.ast.reference.SuperReference;
 import de.uka.ilkd.key.java.ast.reference.ThisReference;
 import de.uka.ilkd.key.java.ast.reference.TypeRef;
 import de.uka.ilkd.key.java.ast.reference.TypeReference;
+import de.uka.ilkd.key.java.ast.statement.Break;
+import de.uka.ilkd.key.java.ast.statement.CatchAllStatement;
+import de.uka.ilkd.key.java.ast.statement.Continue;
+import de.uka.ilkd.key.java.ast.statement.LabeledStatement;
+import de.uka.ilkd.key.java.ast.statement.Return;
 import de.uka.ilkd.key.java.ast.statement.Throw;
 import de.uka.ilkd.key.java.ast.statement.Try;
+import de.uka.ilkd.key.logic.JavaBlock;
+import de.uka.ilkd.key.logic.ProgramPrefix;
 import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.logic.op.ProgramVariable;
 import de.uka.ilkd.key.logic.op.Transformer;
+import de.uka.ilkd.key.logic.sort.ProgramSVSort;
 import de.uka.ilkd.key.proof.Goal;
 import de.uka.ilkd.key.proof.tracing.TracingState;
 import org.jspecify.annotations.Nullable;
 import org.key_project.prover.sequent.PosInOccurrence;
+import org.key_project.util.collection.Pair;
 
 public class TracingRuleUtil {
 
-    public static @Nullable Throw getThrowStatement(Try tryStatement) {
+    // Modified version of JavaTools.getActiveStatement
+    public static @Nullable Pair<Try, Integer> getInnermostTryStatement(JavaBlock jb) {
+        assert jb.program() != null;
+
+        SourceElement result = jb.program().getFirstElement();
+
+        Try lastFoundTry = null;
+        int catchCount = 0;
+
+        while ((result instanceof ProgramPrefix || result instanceof CatchAllStatement)
+                && !(result instanceof StatementBlock && ((StatementBlock) result).isEmpty())) {
+
+            if (result instanceof Try tryStmt) {
+                lastFoundTry = tryStmt;
+                catchCount += tryStmt.getCatchCount();
+            }
+
+            if (result instanceof LabeledStatement) {
+                result = ((LabeledStatement) result).getChildAt(1);
+            } else if (result instanceof CatchAllStatement) {
+                result = ((CatchAllStatement) result).getBody();
+            } else {
+                result = result.getFirstElement();
+            }
+        }
+
+        if (lastFoundTry == null) {
+            return null;
+        }
+
+        return new Pair<>(lastFoundTry, catchCount - lastFoundTry.getCatchCount());
+    }
+
+    public static @Nullable Statement getTryInterruptingStatement(Try tryStatement, Services services) {
         if (tryStatement == null) {
             return null;
         }
@@ -34,21 +80,24 @@ public class TracingRuleUtil {
             return null;
         }
 
-        ProgramElement firstStatement = tryStatement.getBody().getStatementAt(0);
+        Statement firstStatement = tryStatement.getBody().getStatementAt(0);
 
-        if (firstStatement instanceof PassiveExpression pe) {
-            firstStatement = pe.getChildAt(0);
+        if (IsTryInterruptingStatement(firstStatement, services)) {
+            return firstStatement;
         }
 
-        if (!(firstStatement instanceof Throw throwStmt)) {
-            return null;
-        }
+        return null;
+    }
 
-        if (!(throwStmt.getExpressionAt(0) instanceof PassiveExpression)) {
-            return null;
-        }
+    public static boolean IsTryInterruptingStatement(ProgramElement statement, Services services) {
+        return (statement instanceof Throw throwStmt && throwStmt.getExpressionAt(0) instanceof PassiveExpression) ||
+                (statement instanceof Return returnStmt && isSimpleExpression(returnStmt.getExpression(), services)) ||
+                statement instanceof Break ||
+                statement instanceof Continue;
+    }
 
-        return throwStmt;
+    public static boolean isSimpleExpression(Expression expression, Services services) {
+        return ProgramSVSort.SIMPLEEXPRESSION.canStandFor(expression, null, services);
     }
 
     public static TracingState getTracingState(Goal goal) {

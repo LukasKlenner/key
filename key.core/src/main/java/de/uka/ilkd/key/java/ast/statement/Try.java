@@ -11,6 +11,7 @@ import de.uka.ilkd.key.java.visitor.Visitor;
 import de.uka.ilkd.key.logic.PosInProgram;
 import de.uka.ilkd.key.logic.ProgramPrefix;
 
+import org.jspecify.annotations.Nullable;
 import org.key_project.util.ExtList;
 import org.key_project.util.collection.ImmutableArray;
 
@@ -266,6 +267,21 @@ public class Try extends BranchStatement implements StatementContainer, ProgramP
      */
     public ImmutableArray<Branch> getBranchList() {
         return branches;
+    }
+
+    public boolean hasFinallyBranch() {
+        return getBranchCount() > 0 && getBranchAt(getBranchCount() - 1) instanceof Finally;
+    }
+
+    public @Nullable Finally getFinallyBranch() {
+        if (hasFinallyBranch()) {
+            return (Finally) getBranchAt(getBranchCount() - 1);
+        }
+        return null;
+    }
+
+    public int getCatchCount() {
+        return hasFinallyBranch() ? getBranchCount() - 1 : getBranchCount();
     }
 
     /**

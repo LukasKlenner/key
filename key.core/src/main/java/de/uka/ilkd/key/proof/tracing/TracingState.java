@@ -8,6 +8,8 @@ public class TracingState {
 
     private final FunctionDatabase functionDatabase;
 
+    private long currentCatchCount = 0;
+
     public TracingState(ImmutableList<TraceElement> traceElements, FunctionDatabase functionDatabase) {
         this.traceElements = traceElements;
         this.functionDatabase = functionDatabase;
@@ -16,6 +18,7 @@ public class TracingState {
     public TracingState(TracingState other) {
         this.traceElements = ImmutableList.fromList(other.traceElements);
         this.functionDatabase = other.functionDatabase;
+        this.currentCatchCount = other.currentCatchCount;
     }
 
     public TraceElement getNextTraceElement() {
@@ -37,6 +40,14 @@ public class TracingState {
 
     public void continueTrace() {
         traceElements = traceElements.tail();
+    }
+
+    public long getCurrentCatchCount() {
+        return currentCatchCount;
+    }
+
+    public void incrementCurrentCatchCount(long catchCount) {
+        currentCatchCount += catchCount;
     }
 
     public FunctionDatabase getFunctionDatabase() {

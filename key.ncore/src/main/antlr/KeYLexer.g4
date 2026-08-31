@@ -202,6 +202,10 @@ NEW_TYPE_OF
    : '\\newTypeOf'
    ;
 
+IS_PASSIVE_EXPRESSION
+   : '\\isPassiveExpression'
+   ;
+
 HAS_ELEMENTARY_SORT
    : '\\hasElementarySort'
    ;
@@ -956,4 +960,3 @@ DOC_COMMENT_END
 DOC_COMMENT_ANY_CHAR
    : . -> more
    ;
-

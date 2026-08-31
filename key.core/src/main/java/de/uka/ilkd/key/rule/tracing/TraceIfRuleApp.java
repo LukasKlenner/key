@@ -23,6 +23,8 @@ public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
     private @Nullable Statement resolvedBranchBody;
     private boolean thenBranch;
 
+    private boolean instantiated = false;
+
     public TraceIfRuleApp(TraceIfRule rule, @Nullable PosInOccurrence pos,
                           TermServices services) {
         this(rule, pos, null, services);
@@ -33,6 +35,11 @@ public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
                            TermServices services) {
         super(rule, pos, ifInsts);
         this.services = services;
+    }
+
+    @Override
+    public boolean complete() {
+        return instantiated;
     }
 
     @Override
@@ -58,6 +65,8 @@ public class TraceIfRuleApp extends AbstractTraceRuleApp<TraceIfRule> {
             this.resolvedBranchBody = ifStmt.getElse() != null
                     ? ifStmt.getElse().getBody() : null;
         }
+
+        instantiated = true;
 
         return this;
     }
