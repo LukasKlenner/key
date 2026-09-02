@@ -38,6 +38,10 @@ public class TracingState {
         return next instanceof TraceElement.If || next instanceof TraceElement.Else;
     }
 
+    public boolean isAtEndOfTrace() {
+        return getNextTraceElement() instanceof TraceElement.End;
+    }
+
     public void continueTrace() {
         traceElements = traceElements.tail();
     }

@@ -373,6 +373,9 @@ public class TacletBuilderManipulators {
     public static final AbstractConditionBuilder IS_PASSIVE_EXPRESSION =
         new ConstructorBasedBuilder("isPassiveExpression", IsPassiveExpression.class, SV);
 
+    public static final AbstractConditionBuilder IS_AT_END_OF_TRACE =
+            new ConstructorBasedBuilder("isAtEndOfTrace", IsAtEndOfTrace.class, SV);
+
     // region Registry
     static {
         register(SAME_OBSERVER, SIMPLIFY_ITE_UPDATE, ABSTRACT_OR_INTERFACE, SAME, IS_SUBTYPE,
@@ -385,7 +388,7 @@ public class TacletBuilderManipulators {
             applyUpdateOnRigid, DROP_EFFECTLESS_ELEMENTARIES, SIMPLIFY_ITE_UPDATE, SUBFORMULAS,
             STATIC_FIELD, MODEL_FIELD, SUBFORMULA, DROP_EFFECTLESS_STORES, EQUAL_UNIQUE,
             META_DISJOINT,
-            IS_OBSERVER, CONSTANT, HAS_SORT, LABEL, NEW_LABEL, HAS_ELEM_SORT, IS_IN_STRICTFP, IS_PASSIVE_EXPRESSION);
+            IS_OBSERVER, CONSTANT, HAS_SORT, LABEL, NEW_LABEL, HAS_ELEM_SORT, IS_IN_STRICTFP, IS_PASSIVE_EXPRESSION, IS_AT_END_OF_TRACE);
         register(STORE_TERM_IN, STORE_STMT_IN, HAS_INVARIANT, GET_INVARIANT, GET_FREE_INVARIANT,
             GET_VARIANT, IS_LABELED);
         loadWithServiceLoader();

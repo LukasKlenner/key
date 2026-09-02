@@ -206,6 +206,10 @@ IS_PASSIVE_EXPRESSION
    : '\\isPassiveExpression'
    ;
 
+IS_AT_END_OF_TRACE
+   : '\\isAtEndOfTrace'
+   ;
+
 HAS_ELEMENTARY_SORT
    : '\\hasElementarySort'
    ;
