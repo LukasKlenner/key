@@ -42,7 +42,7 @@ public class CheatCommand extends NoArgumentCommand {
         CHEAT_TACLET =
             new NoFindTaclet(new Name("CHEAT"), applPart, ImmutableList.of(), ImmutableList.of(),
                 new TacletAttributes("cheat", null), DefaultImmutableMap.nilMap(), ChoiceExpr.TRUE,
-                ImmutableSet.empty());
+                ImmutableSet.empty(), 0); // TODO 0 für advanceTraceCount korrekt?
     }
 
     @Override

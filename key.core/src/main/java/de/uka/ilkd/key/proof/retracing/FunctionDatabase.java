@@ -1,4 +1,4 @@
-package de.uka.ilkd.key.proof.tracing;
+package de.uka.ilkd.key.proof.retracing;
 
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;

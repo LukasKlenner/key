@@ -1,7 +1,6 @@
 package de.uka.ilkd.key.rule.tracing;
 
 import de.uka.ilkd.key.java.Services;
-import de.uka.ilkd.key.java.ast.ProgramElement;
 import de.uka.ilkd.key.java.ast.Statement;
 import de.uka.ilkd.key.java.ast.statement.Catch;
 import de.uka.ilkd.key.java.ast.statement.Finally;
@@ -10,7 +9,7 @@ import de.uka.ilkd.key.java.ast.statement.Try;
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.logic.TermServices;
 import de.uka.ilkd.key.proof.Goal;
-import de.uka.ilkd.key.proof.tracing.TraceElement;
+import de.uka.ilkd.key.proof.retracing.TraceElement;
 import de.uka.ilkd.key.rule.AbstractBuiltInRuleApp;
 import org.jspecify.annotations.Nullable;
 import org.key_project.prover.sequent.PosInOccurrence;

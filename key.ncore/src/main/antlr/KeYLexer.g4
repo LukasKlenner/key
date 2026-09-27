@@ -158,6 +158,10 @@ PROGRAMVARIABLES
    : '\\programVariables'
    ;
 
+ADVANCETRACE
+   : '\\advanceTrace'
+   ;
+
 VARCOND
    : '\\varcond'
    ;
@@ -206,8 +210,16 @@ IS_PASSIVE_EXPRESSION
    : '\\isPassiveExpression'
    ;
 
-IS_AT_END_OF_TRACE
-   : '\\isAtEndOfTrace'
+IS_UNTRACED_METHOD
+   : '\\isUntracedMethod'
+   ;
+
+NEXT_TRACE_PATTERN
+   : '\\nextTracePattern'
+   ;
+
+IS_UNTRACED_FIELD
+   : '\\isUntracedField'
    ;
 
 HAS_ELEMENTARY_SORT

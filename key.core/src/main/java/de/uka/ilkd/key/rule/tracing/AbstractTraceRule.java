@@ -9,7 +9,6 @@ import de.uka.ilkd.key.logic.TermServices;
 import de.uka.ilkd.key.logic.op.JModality;
 import de.uka.ilkd.key.logic.op.UpdateApplication;
 import de.uka.ilkd.key.proof.Goal;
-import de.uka.ilkd.key.proof.tracing.TracingState;
 import de.uka.ilkd.key.rule.BuiltInRule;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

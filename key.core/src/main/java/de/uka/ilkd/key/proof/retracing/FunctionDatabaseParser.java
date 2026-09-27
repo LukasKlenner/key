@@ -1,4 +1,4 @@
-package de.uka.ilkd.key.proof.tracing;
+package de.uka.ilkd.key.proof.retracing;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

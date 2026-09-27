@@ -18,7 +18,7 @@ import de.uka.ilkd.key.proof.init.InitConfig;
 import de.uka.ilkd.key.proof.init.Profile;
 import de.uka.ilkd.key.proof.io.consistency.FileRepo;
 import de.uka.ilkd.key.proof.mgt.SpecificationRepository;
-import de.uka.ilkd.key.proof.tracing.TracingState;
+import de.uka.ilkd.key.proof.retracing.TracingState;
 import de.uka.ilkd.key.util.KeYResourceManager;
 
 import org.key_project.logic.LogicServices;

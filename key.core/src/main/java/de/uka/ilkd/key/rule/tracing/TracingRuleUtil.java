@@ -31,7 +31,7 @@ import de.uka.ilkd.key.logic.op.ProgramVariable;
 import de.uka.ilkd.key.logic.op.Transformer;
 import de.uka.ilkd.key.logic.sort.ProgramSVSort;
 import de.uka.ilkd.key.proof.Goal;
-import de.uka.ilkd.key.proof.tracing.TracingState;
+import de.uka.ilkd.key.proof.retracing.TracingState;
 import org.jspecify.annotations.Nullable;
 import org.key_project.prover.sequent.PosInOccurrence;
 import org.key_project.util.collection.Pair;

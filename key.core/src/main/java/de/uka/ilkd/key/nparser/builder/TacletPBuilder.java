@@ -606,6 +606,13 @@ public class TacletPBuilder extends ExpressionBuilder {
             b.setDisplayName(Objects.requireNonNull(accept(ctx.dname)));
         }
 
+        if (ctx.advanceTrace() != null && !ctx.advanceTrace().isEmpty()) {
+            if (ctx.advanceTrace().size() > 1) {
+                semanticError(ctx, "Only one \\advanceTrace is allowed per taclet.");
+            }
+            b.setAdvanceTrace(Integer.parseInt(ctx.advanceTrace().get(0).traceElementsCount.getText()));
+        }
+
         mapOf(ctx.triggers());
         return null;
     }

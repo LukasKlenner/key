@@ -78,8 +78,6 @@ public final class MethodCall extends ProgramTransformer {
     protected ImmutableArray<Expression> arguments;
     protected KeYJavaType staticPrefixType;
 
-    private final ProgramSV targetMethodId;
-
     /**
      * creates the methodcall-MetaConstruct
      *
@@ -96,7 +94,7 @@ public final class MethodCall extends ProgramTransformer {
      * @param body the ProgramElement contained by the meta construct
      */
     public MethodCall(SchemaVariable result, ProgramElement body) {
-        this(null, result, null, body);
+        this(null, result, body);
     }
 
     /**
@@ -111,7 +109,6 @@ public final class MethodCall extends ProgramTransformer {
         this.execContext = ec;
         this.resultVar = null;
         this.execContextSV = null;
-        this.targetMethodId = null;
     }
 
     /**
@@ -120,8 +117,8 @@ public final class MethodCall extends ProgramTransformer {
      * @param result the SchemaVariable that is used to keep the result
      * @param body the ProgramElement contained by the meta construct
      */
-    public MethodCall(ProgramSV ec, SchemaVariable result, ProgramSV targetMethodId, ProgramElement body) {
-        this(new Name("method-call"), ec, result, targetMethodId, body);
+    public MethodCall(ProgramSV ec, SchemaVariable result, ProgramElement body) {
+        this(new Name("method-call"), ec, result, body);
     }
 
     /**
@@ -132,11 +129,10 @@ public final class MethodCall extends ProgramTransformer {
      * @param name Method name.
      * @param ec The Schema Variable.
      */
-    protected MethodCall(Name name, ProgramSV ec, SchemaVariable result, ProgramSV targetMethodId, ProgramElement body) {
+    protected MethodCall(Name name, ProgramSV ec, SchemaVariable result, ProgramElement body) {
         super(name, body);
         this.resultVar = result;
         this.execContextSV = ec;
-        this.targetMethodId = targetMethodId;
     }
 
     /** gets an array of expression and returns a list of types */
@@ -232,7 +228,7 @@ public final class MethodCall extends ProgramTransformer {
     @Override
     public ProgramElement[] transform(ProgramElement pe, Services services,
             SVInstantiations svInst) {
-        return new MethodCall((ProgramSV) execContextSV, resultVar, targetMethodId, body())
+        return new MethodCall((ProgramSV) execContextSV, resultVar, body())
                 .transformImpl(pe, services, svInst);
     }
 

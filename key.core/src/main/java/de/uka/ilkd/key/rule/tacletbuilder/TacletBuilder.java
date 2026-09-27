@@ -51,6 +51,7 @@ public abstract class TacletBuilder<T extends Taclet> {
         ImmutableList.nil();
     protected ImmutableList<RuleSet> ruleSets = ImmutableList.nil();
     protected TacletAttributes attrs = new TacletAttributes(NONAME.toString(), null);
+    protected int advancedTraceCount = 0;
 
     /**
      * List of additional generic conditions on the instantiations of schema variables.
@@ -135,6 +136,16 @@ public abstract class TacletBuilder<T extends Taclet> {
     public void setAssumesSequent(Sequent seq) {
         checkContainsFreeVarSV(seq, getName(), "sequent");
         this.assumesSeq = seq;
+    }
+
+    /**
+     * sets the advance trace count
+     */
+    public void setAdvanceTrace(int count) {
+        if (count < 0) {
+            throw new TacletBuilderException(getName(), "advance trace count must be non-negative");
+        }
+        this.advancedTraceCount = count;
     }
 
     /**

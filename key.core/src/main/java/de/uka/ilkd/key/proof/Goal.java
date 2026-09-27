@@ -661,6 +661,14 @@ public final class Goal implements ProofGoal<Goal> {
      */
     @Override
     public ImmutableList<Goal> apply(final RuleApp ruleApp) {
+
+        // TODO find cleaner solution
+        // strategy.isApprovedApp is too earlier because of varCond check in tryToInstantiate if not complete
+        // RuleAppListener is too late because taclet conditions are directly checked when the sequent is changed
+        if (proof().getServices().getTracingState() != null) {
+            proof().getServices().getTracingState().updateTraceForApplication(ruleApp);
+        }
+
         final PendingRuleApp pending = computeRuleApp(ruleApp);
         if (pending == null) {
             return null;

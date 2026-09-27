@@ -47,9 +47,10 @@ public class InfFlowContractAppTaclet extends RewriteTaclet {
             TacletAttributes attrs, JTerm find,
             ImmutableMap<SchemaVariable, TacletPrefix> prefixMap,
             ChoiceExpr choices,
-            ImmutableSet<TacletAnnotation> tacletAnnotations) {
+            ImmutableSet<TacletAnnotation> tacletAnnotations,
+            int advanceTraceCount) {
         super(name, applPart, goalTemplates, ruleSets, attrs, find, prefixMap,
-            choices, tacletAnnotations);
+            choices, tacletAnnotations, advanceTraceCount);
     }
 
 
@@ -59,9 +60,10 @@ public class InfFlowContractAppTaclet extends RewriteTaclet {
             TacletAttributes attrs, JTerm find,
             ImmutableMap<SchemaVariable, TacletPrefix> prefixMap,
             ChoiceExpr choices, boolean surviveSymbExec,
-            ImmutableSet<TacletAnnotation> tacletAnnotations) {
+            ImmutableSet<TacletAnnotation> tacletAnnotations,
+            int advanceTraceCount) {
         super(name, applPart, goalTemplates, ruleSets, attrs, find, prefixMap,
-            choices, surviveSymbExec, tacletAnnotations);
+            choices, surviveSymbExec, tacletAnnotations, advanceTraceCount);
     }
 
     @Override
@@ -82,7 +84,7 @@ public class InfFlowContractAppTaclet extends RewriteTaclet {
             goalTemplates(), getRuleSets(),
             attrs, (JTerm) find, prefixMap,
             choices, getSurviveSymbExec(),
-            tacletAnnotations);
+            tacletAnnotations, advanceTraceCount);
     }
 
 }

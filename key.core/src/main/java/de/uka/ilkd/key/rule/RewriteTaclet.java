@@ -60,9 +60,10 @@ public class RewriteTaclet extends FindTaclet {
             TacletAttributes attrs, JTerm find,
             ImmutableMap<@NonNull SchemaVariable, TacletPrefix> prefixMap,
             ChoiceExpr choices,
-            ImmutableSet<TacletAnnotation> tacletAnnotations) {
+            ImmutableSet<TacletAnnotation> tacletAnnotations,
+                         int advanceTraceCount) {
         this(name, applPart, goalTemplates, ruleSets, attrs, find, prefixMap,
-            choices, false, tacletAnnotations);
+            choices, false, tacletAnnotations, advanceTraceCount);
     }
 
     public RewriteTaclet(Name name, TacletApplPart applPart,
@@ -72,9 +73,10 @@ public class RewriteTaclet extends FindTaclet {
             ImmutableMap<@NonNull SchemaVariable, TacletPrefix> prefixMap,
             ChoiceExpr choices,
             boolean surviveSymbExec,
-            ImmutableSet<TacletAnnotation> tacletAnnotations) {
+            ImmutableSet<TacletAnnotation> tacletAnnotations,
+                         int advanceTraceCount) {
         super(name, applPart, goalTemplates, ruleSets, attrs, find, prefixMap, choices,
-            surviveSymbExec, tacletAnnotations);
+            surviveSymbExec, tacletAnnotations, advanceTraceCount);
     }
 
     @Override
@@ -207,6 +209,6 @@ public class RewriteTaclet extends FindTaclet {
 
         return new RewriteTaclet(new Name(s), applPart, goalTemplates(), getRuleSets(), attrs,
             (JTerm) find,
-            prefixMap, choices, getSurviveSymbExec(), tacletAnnotations);
+            prefixMap, choices, getSurviveSymbExec(), tacletAnnotations, advanceTraceCount);
     }
 }

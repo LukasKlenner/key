@@ -1,4 +1,4 @@
-package de.uka.ilkd.key.proof.tracing;
+package de.uka.ilkd.key.proof.retracing;
 
 import org.key_project.util.collection.ImmutableList;
 

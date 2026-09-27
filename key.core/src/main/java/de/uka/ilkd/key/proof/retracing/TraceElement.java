@@ -1,8 +1,12 @@
-package de.uka.ilkd.key.proof.tracing;
+package de.uka.ilkd.key.proof.retracing;
 
 public sealed interface TraceElement {
 
+    int SWITCH_ELEMENT_COUNT = 6;
 
+    default boolean isIfOrElse() {
+        return this instanceof If || this instanceof Else;
+    }
 
     record Call(int functionID) implements TraceElement {
 

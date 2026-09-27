@@ -373,8 +373,17 @@ public class TacletBuilderManipulators {
     public static final AbstractConditionBuilder IS_PASSIVE_EXPRESSION =
         new ConstructorBasedBuilder("isPassiveExpression", IsPassiveExpression.class, SV);
 
-    public static final AbstractConditionBuilder IS_AT_END_OF_TRACE =
-            new ConstructorBasedBuilder("isAtEndOfTrace", IsAtEndOfTrace.class, SV);
+    public static final AbstractConditionBuilder IS_UNTRACED_METHOD_2 =
+            new ConstructorBasedBuilder("isUntracedMethod", IsUntracedMethodCondition.class, SV, SV);
+
+    public static final AbstractConditionBuilder IS_UNTRACED_METHOD_3 =
+            new ConstructorBasedBuilder("isUntracedMethod", IsUntracedMethodCondition.class, SV, SV, SV);
+
+    public static final AbstractConditionBuilder NEXT_TRACE_PATTERN =
+            new ConstructorBasedBuilder("nextTracePattern", NextTracePatternCondition.class, SV, S);
+
+    public static final AbstractConditionBuilder IS_UNTRACED_FIELD =
+            new ConstructorBasedBuilder("isUntracedField", IsUntracedFieldCondition.class, SV);
 
     // region Registry
     static {
@@ -388,7 +397,9 @@ public class TacletBuilderManipulators {
             applyUpdateOnRigid, DROP_EFFECTLESS_ELEMENTARIES, SIMPLIFY_ITE_UPDATE, SUBFORMULAS,
             STATIC_FIELD, MODEL_FIELD, SUBFORMULA, DROP_EFFECTLESS_STORES, EQUAL_UNIQUE,
             META_DISJOINT,
-            IS_OBSERVER, CONSTANT, HAS_SORT, LABEL, NEW_LABEL, HAS_ELEM_SORT, IS_IN_STRICTFP, IS_PASSIVE_EXPRESSION, IS_AT_END_OF_TRACE);
+            IS_OBSERVER, CONSTANT, HAS_SORT, LABEL, NEW_LABEL, HAS_ELEM_SORT, IS_IN_STRICTFP, IS_PASSIVE_EXPRESSION,
+                IS_UNTRACED_METHOD_2, IS_UNTRACED_METHOD_3,
+            NEXT_TRACE_PATTERN, IS_UNTRACED_FIELD);
         register(STORE_TERM_IN, STORE_STMT_IN, HAS_INVARIANT, GET_INVARIANT, GET_FREE_INVARIANT,
             GET_VARIANT, IS_LABELED);
         loadWithServiceLoader();

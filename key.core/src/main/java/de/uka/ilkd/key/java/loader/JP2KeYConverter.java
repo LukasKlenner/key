@@ -39,6 +39,8 @@ import de.uka.ilkd.key.logic.sort.ProgramSVSort;
 import de.uka.ilkd.key.nparser.KeyAst;
 import de.uka.ilkd.key.parser.ParserException;
 import de.uka.ilkd.key.rule.metaconstruct.*;
+import de.uka.ilkd.key.rule.metaconstruct.retracing.TracedMethodCall;
+import de.uka.ilkd.key.rule.metaconstruct.retracing.TracedSwitchStatement;
 import de.uka.ilkd.key.speclang.jml.pretranslation.TextualJMLAssertStatement;
 import de.uka.ilkd.key.speclang.jml.pretranslation.TextualJMLConstruct;
 import de.uka.ilkd.key.speclang.jml.pretranslation.TextualJMLLoopSpec;
@@ -2018,34 +2020,43 @@ class JP2KeYVisitor extends GenericVisitorAdapter<Object, Void> {
             case "#method-call" -> {
                 ProgramSV execSV = null;
                 ProgramSV returnSV = null;
-                ProgramSV methodId = null;
                 for (int i = 0; i < labels.size(); i++) {
                     final OperatorSV sv = (OperatorSV) labels.get(i);
                     if (sv.sort() == ProgramSVSort.VARIABLE) {
                         returnSV = (ProgramSV) sv;
-                    } else if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
+                    }
+                    if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
                         execSV = (ProgramSV) sv;
-                    } else if (sv.sort() == ProgramSVSort.STRINGLITERAL) {
-                        methodId = (ProgramSV) sv;
                     }
 
                 }
-                yield new MethodCall(execSV, returnSV, methodId, accept(n.getChild()));
+                yield new MethodCall(execSV, returnSV, accept(n.getChild()));
             }
-//            case "#method-call-traced" -> {
-//                ProgramSV execSV = null;
-//                ProgramSV returnSV = null;
-//                for (int i = 0; i < labels.size(); i++) {
-//                    final OperatorSV sv = (OperatorSV) labels.get(i);
-//                    if (sv.sort() == ProgramSVSort.VARIABLE) {
-//                        returnSV = (ProgramSV) sv;
-//                    }
-//                    if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
-//                        execSV = (ProgramSV) sv;
-//                    }
-//                }
-//                yield new MethodCallTraced(execSV, returnSV, accept(n.getChild()));
-//            }
+            case "#traced-method-call" -> {
+                ProgramSV execSV = null;
+                ProgramSV returnSV = null;
+                for (int i = 0; i < labels.size(); i++) {
+                    final OperatorSV sv = (OperatorSV) labels.get(i);
+                    if (sv.sort() == ProgramSVSort.VARIABLE) {
+                        returnSV = (ProgramSV) sv;
+                    }
+                    if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
+                        execSV = (ProgramSV) sv;
+                    }
+                }
+                yield new TracedMethodCall(execSV, returnSV, accept(n.getChild()));
+            }
+            case "#traced-switch-statement" -> {
+                ProgramSV execSV = null;
+                for (int i = 0; i < labels.size(); i++) {
+                    final OperatorSV sv = (OperatorSV) labels.get(i);
+                    if (sv.sort() == ProgramSVSort.EXECUTIONCONTEXT) {
+                        execSV = (ProgramSV) sv;
+                    }
+                }
+
+                yield new TracedSwitchStatement(execSV, accept(n.getChild()));
+            }
             case "#evaluate-arguments" -> new EvaluateArgs(accept(n.getChild()));
             case "#constructor-call" -> new ConstructorCall(labels.get(0), accept(n.getChild()));
             case "#special-constructor-call" -> new SpecialConstructorCall(accept(n.getChild()));

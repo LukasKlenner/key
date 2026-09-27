@@ -110,9 +110,13 @@ triggers
    ;
 
 modifiers
-   : (rs = rulesets | NONINTERACTIVE | DISPLAYNAME dname = string_value | HELPTEXT htext = string_value | triggers)*
+   : (rs = rulesets | NONINTERACTIVE | DISPLAYNAME dname = string_value | HELPTEXT htext = string_value | triggers | advanceTrace)*
    ;
    //TODO Split
+
+advanceTrace
+   : ADVANCETRACE LPAREN traceElementsCount = INT_LITERAL RPAREN
+   ;
    
 one_schema_var_decl
    : MODALOPERATOR one_schema_modal_op_decl

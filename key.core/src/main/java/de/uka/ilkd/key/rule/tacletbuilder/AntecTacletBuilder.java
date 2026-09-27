@@ -91,7 +91,7 @@ public class AntecTacletBuilder extends FindTacletBuilder<AntecTaclet> {
                 variableConditions),
             goals, ruleSets, attrs, (Sequent) find,
             prefixBuilder.getPrefixMap(),
-            choices, tacletAnnotations);
+            choices, tacletAnnotations, advancedTraceCount);
         return t;
     }
 }
