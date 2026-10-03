@@ -1,4 +1,4 @@
-package de.uka.ilkd.key.rule.metaconstruct.retracing;
+package de.uka.ilkd.key.rule.retracing.metaconstruct;
 
 import de.uka.ilkd.key.java.KeYJavaASTFactory;
 import de.uka.ilkd.key.java.Services;

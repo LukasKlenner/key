@@ -314,7 +314,7 @@ abstract class AbstractInfFlowContractAppTacletBuilder extends AbstractInfFlowTa
                     varsNewDependingOn,
                     variableConditions),
                 goals, ruleSets, attrs, (JTerm) find, prefixBuilder.getPrefixMap(),
-                choices, surviveSmbExec, tacletAnnotations, advancedTraceCount);
+                choices, surviveSmbExec, tacletAnnotations);
 
         }
     }

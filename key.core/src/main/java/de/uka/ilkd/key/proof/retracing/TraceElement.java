@@ -8,11 +8,15 @@ public sealed interface TraceElement {
         return this instanceof If || this instanceof Else;
     }
 
+    default boolean isCatch() {
+        return this instanceof Catch;
+    }
+
     record Call(int functionID) implements TraceElement {
 
     }
 
-    record Catch(int catchIndex) implements TraceElement {
+    record Catch(long catchIndex) implements TraceElement {
 
     }
 

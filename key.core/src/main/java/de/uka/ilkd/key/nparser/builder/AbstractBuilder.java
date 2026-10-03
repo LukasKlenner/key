@@ -159,6 +159,13 @@ abstract class AbstractBuilder<T> extends JavaKeYParserBaseVisitor<T> {
     }
 
     /**
+     * Creates a semanticError for the given ast node and message.
+     */
+    protected BuildingException newSemanticError(ParserRuleContext ctx, String format, Object... args) {
+        return new BuildingException(ctx, String.format(format, args));
+    }
+
+    /**
      * Wraps an exception into a {@link BuildingException}
      */
     protected void throwEx(Throwable e) {

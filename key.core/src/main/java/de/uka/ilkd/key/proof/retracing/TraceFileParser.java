@@ -49,7 +49,7 @@ public class TraceFileParser {
                     while (i < traceString.length() && isHexDigit(traceString.charAt(i))) {
                         i++;
                     }
-                    int catchIndex = Integer.parseInt(traceString.substring(start, i), 16);
+                    long catchIndex = Long.parseLong(traceString.substring(start, i), 16);
                     elements.add(new TraceElement.Catch(catchIndex));
                 }
                 case 'E' -> {

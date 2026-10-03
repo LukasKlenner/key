@@ -3,7 +3,7 @@ parser grammar KeYTacletParser;
 import KeYSequentParser;
 
 taclet
-   : doc = DOC_COMMENT? (LEMMA)? name = IDENT (choices_ = option_list)? LBRACE (form = term | (SCHEMAVAR one_schema_var_decl SEMI)* (ASSUMES LPAREN assumesSeq = seq RPAREN)? (FIND LPAREN find = termorseq RPAREN (IGNOREUPDATELEVEL | SAMEUPDATELEVEL | INSEQUENTSTATE | ANTECEDENTPOLARITY | SUCCEDENTPOLARITY)*)? (VARCOND LPAREN varexplist RPAREN)* goalspecs modifiers) RBRACE
+   : doc = DOC_COMMENT? (LEMMA)? name = IDENT (choices_ = option_list)? LBRACE (form = term | (SCHEMAVAR one_schema_var_decl SEMI)* (ASSUMES LPAREN assumesSeq = seq RPAREN)? (FIND LPAREN find = termorseq RPAREN (IGNOREUPDATELEVEL | SAMEUPDATELEVEL | INSEQUENTSTATE | ANTECEDENTPOLARITY | SUCCEDENTPOLARITY)*)? (TRACE_PATTERN LPAREN trace_pattern = string_value RPAREN)? (VARCOND LPAREN varexplist RPAREN)* goalspecs modifiers) RBRACE
    ;
 
 option_list
@@ -115,7 +115,10 @@ modifiers
    //TODO Split
 
 advanceTrace
-   : ADVANCETRACE LPAREN traceElementsCount = INT_LITERAL RPAREN
+   : ADVANCETRACE LPAREN
+     traceElementsCount = INT_LITERAL
+     (COMMA catchClausesCount = varId)?
+     RPAREN
    ;
    
 one_schema_var_decl

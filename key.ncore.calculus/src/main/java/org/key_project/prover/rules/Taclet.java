@@ -3,11 +3,8 @@
  * SPDX-License-Identifier: GPL-2.0-only */
 package org.key_project.prover.rules;
 
-import org.checkerframework.checker.calledmethods.qual.RequiresCalledMethods;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import java.util.Iterator;
+
 import org.key_project.logic.ChoiceExpr;
 import org.key_project.logic.Name;
 import org.key_project.logic.SyntaxElement;
@@ -23,7 +20,11 @@ import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.ImmutableMap;
 import org.key_project.util.collection.ImmutableSet;
 
-import java.util.Iterator;
+import org.checkerframework.checker.calledmethods.qual.RequiresCalledMethods;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import static org.key_project.util.Strings.formatAsList;
 
@@ -69,11 +70,6 @@ public abstract class Taclet implements Rule {
     /// the set of taclet options for this taclet
     protected final ChoiceExpr choices;
 
-    /**
-     * The number of element to advance in the tracing state after applying this taclet.
-     */
-    protected final int advanceTraceCount;
-
     /// map from a schemavariable to its prefix. The prefix is used to test correct instantiations
     /// of the schemavariables by resolving/avoiding collisions. Mainly the prefix consists of a
     /// list
@@ -112,22 +108,21 @@ public abstract class Taclet implements Rule {
 
     /// creates a Taclet (originally known as Schematic Theory Specific Rules)
     ///
-    /// @param name          the name of the Taclet
-    /// @param find          the Term or Sequent that is the pattern that has to be found in a sequent and
+    /// @param name the name of the Taclet
+    /// @param find the Term or Sequent that is the pattern that has to be found in a sequent and
     /// the places where it matches the Taclet can be applied
-    /// @param applPart      contains the application part of a Taclet that is the if-sequence, the
+    /// @param applPart contains the application part of a Taclet that is the if-sequence, the
     /// variable conditions
     /// @param goalTemplates a list of goal descriptions.
-    /// @param attrs         attributes for the Taclet; these are boolean values indicating a noninteractive
+    /// @param attrs attributes for the Taclet; these are boolean values indicating a noninteractive
     /// or recursive use of the Taclet.
-    @EnsuresNonNull({"matcher", "executor"})
+    @EnsuresNonNull({ "matcher", "executor" })
     protected Taclet(Name name, SyntaxElement find, TacletApplPart applPart,
-                     ImmutableList<TacletGoalTemplate> goalTemplates,
-                     ImmutableList<RuleSet> ruleSets,
-                     TacletAttributes attrs,
-                     ImmutableMap<SchemaVariable, TacletPrefix> prefixMap, ChoiceExpr choices,
-                     ImmutableSet<TacletAnnotation> tacletAnnotations,
-                     int advanceTraceCount) {
+            ImmutableList<TacletGoalTemplate> goalTemplates,
+            ImmutableList<RuleSet> ruleSets,
+            TacletAttributes attrs,
+            ImmutableMap<SchemaVariable, TacletPrefix> prefixMap, ChoiceExpr choices,
+            ImmutableSet<TacletAnnotation> tacletAnnotations) {
         this.tacletAnnotations = tacletAnnotations;
         this.name = name;
         this.find = find;
@@ -143,7 +138,6 @@ public abstract class Taclet implements Rule {
         this.trigger = attrs.trigger();
         this.ruleSets = ruleSets;
         this.choices = choices;
-        this.advanceTraceCount = advanceTraceCount;
         createTacletServices();
         check();
     }
@@ -154,12 +148,12 @@ public abstract class Taclet implements Rule {
     private void check(@UnderInitialization Taclet this) {
         if (find == null
                 && (applicationRestriction == null || // check to make checkerframework happy
-                !applicationRestriction.matches(ApplicationRestriction.IN_SEQUENT_STATE))) {
+                        !applicationRestriction.matches(ApplicationRestriction.IN_SEQUENT_STATE))) {
             throw new IllegalStateException("NoFind taclets should imply \\inSequentState");
         }
         if (find instanceof Sequent seq && seq.size() != 1) {
             throw new IllegalStateException(
-                    "Antec and Succ taclets must have exactly one formula in sequent");
+                "Antec and Succ taclets must have exactly one formula in sequent");
         }
     }
 
@@ -180,7 +174,7 @@ public abstract class Taclet implements Rule {
     /// creates and initializes the taclet matching and execution engines has to be called at the
     /// end
     /// of initialization
-    @EnsuresNonNull({"matcher", "executor"})
+    @EnsuresNonNull({ "matcher", "executor" })
     private void createTacletServices(@UnderInitialization Taclet this) {
         createAndInitializeMatcher();
         createAndInitializeExecutor();

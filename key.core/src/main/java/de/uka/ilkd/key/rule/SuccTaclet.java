@@ -47,11 +47,9 @@ public class SuccTaclet extends FindTaclet {
             TacletAttributes attrs, Sequent find,
             ImmutableMap<SchemaVariable, org.key_project.prover.rules.TacletPrefix> prefixMap,
             ChoiceExpr choices,
-            ImmutableSet<TacletAnnotation> tacletAnnotations,
-            int advanceTraceCount
-    ) {
+            ImmutableSet<TacletAnnotation> tacletAnnotations) {
         super(name, applPart, goalTemplates, heuristics, attrs, find, prefixMap, choices,
-            tacletAnnotations, advanceTraceCount);
+            tacletAnnotations);
     }
 
     @Override
@@ -78,7 +76,7 @@ public class SuccTaclet extends FindTaclet {
         final TacletAttributes attrs = new TacletAttributes(displayName(), trigger);
         return new SuccTaclet(new Name(s), applPart, goalTemplates(), getRuleSets(), attrs,
             (Sequent) find,
-            prefixMap, choices, tacletAnnotations, advanceTraceCount);
+            prefixMap, choices, tacletAnnotations);
     }
 
 

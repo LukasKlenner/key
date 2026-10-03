@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: GPL-2.0-only */
 package de.uka.ilkd.key.rule;
 
+import java.util.*;
+
 import de.uka.ilkd.key.java.Services;
-import de.uka.ilkd.key.logic.BoundVarsVisitor;
-import de.uka.ilkd.key.logic.JTerm;
-import de.uka.ilkd.key.logic.OpCollector;
+import de.uka.ilkd.key.logic.*;
 import de.uka.ilkd.key.logic.label.TermLabel;
 import de.uka.ilkd.key.proof.mgt.AxiomJustification;
 import de.uka.ilkd.key.proof.mgt.LemmaJustification;
@@ -14,18 +14,13 @@ import de.uka.ilkd.key.proof.mgt.RuleJustification;
 import de.uka.ilkd.key.rule.match.TacletMatcherKit;
 import de.uka.ilkd.key.rule.tacletbuilder.AntecSuccTacletGoalTemplate;
 import de.uka.ilkd.key.rule.tacletbuilder.RewriteTacletGoalTemplate;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.jspecify.annotations.NonNull;
+
 import org.key_project.logic.ChoiceExpr;
 import org.key_project.logic.Name;
 import org.key_project.logic.SyntaxElement;
 import org.key_project.logic.op.QuantifiableVariable;
 import org.key_project.logic.op.sv.SchemaVariable;
-import org.key_project.prover.rules.RuleSet;
-import org.key_project.prover.rules.TacletAnnotation;
-import org.key_project.prover.rules.TacletApplPart;
-import org.key_project.prover.rules.TacletAttributes;
-import org.key_project.prover.rules.TacletExecutor;
+import org.key_project.prover.rules.*;
 import org.key_project.prover.rules.tacletbuilder.TacletGoalTemplate;
 import org.key_project.prover.sequent.PosInOccurrence;
 import org.key_project.prover.sequent.Sequent;
@@ -35,9 +30,8 @@ import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.ImmutableMap;
 import org.key_project.util.collection.ImmutableSet;
 
-import java.util.Deque;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -45,7 +39,7 @@ import java.util.Set;
  * of a logic (sequent) calculus. A typical taclet definition looks similar to <br>
  * </br>
  * <code>
- * taclet_name { if ( ... ) find ( ... ) goal_descriptions }
+ *    taclet_name { if ( ... ) find ( ... ) goal_descriptions }
  * </code> <br>
  * </br>
  * where the if-part must and the find-part can contain a sequent arrow, that indicates, if a term
@@ -62,7 +56,7 @@ import java.util.Set;
  * the goal descriptions. For example <br>
  * </br>
  * <code>
- * find (A | B ==>) replacewith ( A ==> ); replacewith(B ==>)
+ *    find (A | B ==>) replacewith ( A ==> ); replacewith(B ==>)
  * </code> <br>
  * </br>
  * creates two new goals, where the first has been built by replacing <code> A | B </code> with
@@ -115,10 +109,9 @@ public abstract class Taclet extends org.key_project.prover.rules.Taclet impleme
             TacletAttributes attrs,
             ImmutableMap<@NonNull SchemaVariable, org.key_project.prover.rules.TacletPrefix> prefixMap,
             ChoiceExpr choices, boolean surviveSmbExec,
-            ImmutableSet<TacletAnnotation> tacletAnnotations,
-            int advanceTraceCount) {
+            ImmutableSet<TacletAnnotation> tacletAnnotations) {
         super(name, find, applPart, goalTemplates, ruleSets, attrs, prefixMap, choices,
-                tacletAnnotations, advanceTraceCount);
+            tacletAnnotations);
         this.surviveSymbExec = surviveSmbExec;
     }
 
@@ -141,10 +134,9 @@ public abstract class Taclet extends org.key_project.prover.rules.Taclet impleme
             ImmutableList<RuleSet> ruleSets,
             TacletAttributes attrs,
             ImmutableMap<@NonNull SchemaVariable, org.key_project.prover.rules.TacletPrefix> prefixMap,
-            ChoiceExpr choices, ImmutableSet<TacletAnnotation> tacletAnnotations,
-            int advanceTraceCount) {
+            ChoiceExpr choices, ImmutableSet<TacletAnnotation> tacletAnnotations) {
         this(name, find, applPart, goalTemplates, ruleSets, attrs, prefixMap, choices, false,
-                tacletAnnotations, advanceTraceCount);
+            tacletAnnotations);
     }
 
     @EnsuresNonNull("matcher")
@@ -172,7 +164,7 @@ public abstract class Taclet extends org.key_project.prover.rules.Taclet impleme
     public ImmutableSet<QuantifiableVariable> getBoundVariables() {
         if (boundVariables == null) {
             ImmutableSet<QuantifiableVariable> result =
-                    DefaultImmutableSet.nil();
+                DefaultImmutableSet.nil();
 
             for (final TacletGoalTemplate tgt : goalTemplates()) {
                 result = result.union(tgt.getBoundVariables());
@@ -321,10 +313,6 @@ public abstract class Taclet extends org.key_project.prover.rules.Taclet impleme
 
     public boolean getSurviveSymbExec() {
         return surviveSymbExec;
-    }
-
-    public int getAdvanceTraceCount() {
-        return advanceTraceCount;
     }
 
     /**

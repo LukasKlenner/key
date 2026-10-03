@@ -3,16 +3,20 @@
  * SPDX-License-Identifier: GPL-2.0-only */
 package de.uka.ilkd.key.nparser.builder;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
 import de.uka.ilkd.key.java.ast.abstraction.PrimitiveType;
 import de.uka.ilkd.key.java.ast.abstraction.Type;
 import de.uka.ilkd.key.ldt.JavaDLTheory;
-import de.uka.ilkd.key.logic.*;
-import de.uka.ilkd.key.logic.op.*;
+import de.uka.ilkd.key.logic.GenericArgument;
+import de.uka.ilkd.key.logic.JTerm;
+import de.uka.ilkd.key.logic.NamespaceSet;
+import de.uka.ilkd.key.logic.ProgramElementName;
+import de.uka.ilkd.key.logic.op.JModality;
+import de.uka.ilkd.key.logic.op.JOperatorSV;
+import de.uka.ilkd.key.logic.op.ParametricFunctionInstance;
+import de.uka.ilkd.key.logic.op.SchemaVariableFactory;
+import de.uka.ilkd.key.logic.op.VariableSV;
 import de.uka.ilkd.key.logic.sort.GenericSort;
 import de.uka.ilkd.key.logic.sort.ParametricSortInstance;
 import de.uka.ilkd.key.logic.sort.ProgramSVSort;
@@ -22,12 +26,34 @@ import de.uka.ilkd.key.nparser.varexp.TacletBuilderCommand;
 import de.uka.ilkd.key.nparser.varexp.TacletBuilderManipulators;
 import de.uka.ilkd.key.parser.SchemaVariableModifierSet;
 import de.uka.ilkd.key.proof.calculus.JavaDLSequentKit;
-import de.uka.ilkd.key.rule.*;
+import de.uka.ilkd.key.rule.NoFindTaclet;
+import de.uka.ilkd.key.rule.RewriteTaclet;
+import de.uka.ilkd.key.rule.Taclet;
 import de.uka.ilkd.key.rule.conditions.TypeResolver;
-import de.uka.ilkd.key.rule.tacletbuilder.*;
+import de.uka.ilkd.key.rule.retracing.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingAntecTacletBuilder;
+import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingSuccTacletBuilder;
+import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingTacletBuilder;
+import de.uka.ilkd.key.rule.tacletbuilder.AntecSuccTacletGoalTemplate;
+import de.uka.ilkd.key.rule.tacletbuilder.AntecTacletBuilder;
+import de.uka.ilkd.key.rule.tacletbuilder.NoFindTacletBuilder;
+import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingRewriteTacletBuilder;
+import de.uka.ilkd.key.rule.tacletbuilder.RewriteTacletBuilder;
+import de.uka.ilkd.key.rule.tacletbuilder.RewriteTacletGoalTemplate;
+import de.uka.ilkd.key.rule.tacletbuilder.SuccTacletBuilder;
+import de.uka.ilkd.key.rule.tacletbuilder.TacletBuilder;
+import de.uka.ilkd.key.rule.tacletbuilder.TacletGoalTemplate;
 import de.uka.ilkd.key.util.parsing.BuildingException;
-
-import org.key_project.logic.*;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.Token;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.key_project.logic.Choice;
+import org.key_project.logic.ChoiceExpr;
+import org.key_project.logic.Name;
+import org.key_project.logic.Namespace;
+import org.key_project.logic.Term;
 import org.key_project.logic.op.Function;
 import org.key_project.logic.op.QuantifiableVariable;
 import org.key_project.logic.op.sv.SchemaVariable;
@@ -38,15 +64,24 @@ import org.key_project.prover.rules.TacletAnnotation;
 import org.key_project.prover.rules.Trigger;
 import org.key_project.prover.sequent.Sequent;
 import org.key_project.prover.sequent.SequentFormula;
-import org.key_project.util.collection.*;
-
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.Token;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.key_project.util.collection.DefaultImmutableSet;
+import org.key_project.util.collection.ImmutableList;
+import org.key_project.util.collection.ImmutableSet;
+import org.key_project.util.collection.Immutables;
+import org.key_project.util.collection.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static java.text.MessageFormat.format;
 
@@ -162,7 +197,7 @@ public class TacletPBuilder extends ExpressionBuilder {
             if (!axiomMode) {
                 semanticError(ctx, "formula rules are only permitted for \\axioms");
             }
-            TacletBuilder<?> b = createTacletBuilderFor(null, ApplicationRestriction.NONE, ctx);
+            TacletBuilder<?> b = createTacletBuilderFor(null, null, ApplicationRestriction.NONE, ctx);
             currentTBuilder.push(b);
             SequentFormula sform = new SequentFormula(form);
             Sequent addSeq = JavaDLSequentKit.createAnteSequent(ImmutableList.singleton(sform));
@@ -229,7 +264,9 @@ public class TacletPBuilder extends ExpressionBuilder {
                 applicationRestriction.combine(ApplicationRestriction.SUCCEDENT_POLARITY);
         }
 
-        TacletBuilder<?> b = createTacletBuilderFor(find, applicationRestriction, ctx);
+        Object tracePattern = accept(ctx.trace_pattern);
+
+        TacletBuilder<?> b = createTacletBuilderFor(find, tracePattern, applicationRestriction, ctx);
         currentTBuilder.push(b);
         b.setAssumesSequent(assumesSeq);
         b.setName(new Name(name));
@@ -607,10 +644,16 @@ public class TacletPBuilder extends ExpressionBuilder {
         }
 
         if (ctx.advanceTrace() != null && !ctx.advanceTrace().isEmpty()) {
-            if (ctx.advanceTrace().size() > 1) {
-                semanticError(ctx, "Only one \\advanceTrace is allowed per taclet.");
+            if (!(b instanceof RetracingTacletBuilder<?> retracingTacletBuilder)) {
+                throw newSemanticError(ctx, "\\advanceTrace is only allowed for retracing taclets.");
             }
-            b.setAdvanceTrace(Integer.parseInt(ctx.advanceTrace().get(0).traceElementsCount.getText()));
+            if (ctx.advanceTrace().size() > 1) {
+                throw newSemanticError(ctx, "Only one \\advanceTrace is allowed per taclet.");
+            }
+            retracingTacletBuilder.setAdvanceTrace(new AdvanceTraceInformation(
+                    Integer.parseInt(ctx.advanceTrace(0).traceElementsCount.getText()),
+                    accept(ctx.advanceTrace(0).catchClausesCount)
+            ));
         }
 
         mapOf(ctx.triggers());
@@ -874,26 +917,59 @@ public class TacletPBuilder extends ExpressionBuilder {
         return ImmutableList.fromList(taclets);
     }
 
-    private @NonNull TacletBuilder<?> createTacletBuilderFor(Object find,
+    private @NonNull TacletBuilder<?> createTacletBuilderFor(
+            Object find,
+            Object tracePattern,
             ApplicationRestriction applicationRestriction,
             ParserRuleContext ctx) {
+
+        boolean isRetracingTaclet = tracePattern != null;
+
         switch (find) {
             case null -> {
+                if (isRetracingTaclet) {
+                    semanticError(ctx, "Retracing taclet must have a find clause.");
+                }
                 return new NoFindTacletBuilder();
             }
             case JTerm jTerm -> {
+                if (isRetracingTaclet) {
+                    return new RetracingRewriteTacletBuilder()
+                            .setFind(jTerm)
+                            .setTracePattern((String) tracePattern)
+                            .setApplicationRestriction(applicationRestriction);
+                }
                 return new RewriteTacletBuilder<>().setFind(jTerm)
                         .setApplicationRestriction(applicationRestriction);
             }
             case Sequent findSeq -> {
                 if (findSeq.isEmpty()) {
+                    if (isRetracingTaclet) {
+                        semanticError(ctx, "Retracing taclet must have a find clause.");
+                    }
                     return new NoFindTacletBuilder();
                 } else if (findSeq.antecedent().size() == 1 && findSeq.succedent().isEmpty()) {
+
+                    if (isRetracingTaclet) {
+                        return new RetracingAntecTacletBuilder()
+                                .setFind(findSeq)
+                                .setTracePattern((String) tracePattern)
+                                .setApplicationRestriction(applicationRestriction);
+                    }
+
                     AntecTacletBuilder b = new AntecTacletBuilder();
                     b.setFind(findSeq);
                     b.setApplicationRestriction(applicationRestriction);
                     return b;
                 } else if (findSeq.antecedent().isEmpty() && findSeq.succedent().size() == 1) {
+
+                    if (isRetracingTaclet) {
+                        return new RetracingSuccTacletBuilder()
+                                .setFind(findSeq)
+                                .setTracePattern((String) tracePattern)
+                                .setApplicationRestriction(applicationRestriction);
+                    }
+
                     SuccTacletBuilder b = new SuccTacletBuilder();
                     b.setFind(findSeq);
                     b.setApplicationRestriction(applicationRestriction);

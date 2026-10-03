@@ -263,8 +263,8 @@ varexpId: // weigl, 2021-03-12: This will be later just an arbitrary identifier.
   | ISINSTRICTFP
   | IS_PASSIVE_EXPRESSION
   | IS_UNTRACED_METHOD
-  | NEXT_TRACE_PATTERN
   | IS_UNTRACED_FIELD
+  | CATCH_COUNT
 ;
 
 varexp_argument

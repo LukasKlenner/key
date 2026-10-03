@@ -60,7 +60,7 @@ public class AssumeCommand extends AbstractCommand {
             new NoFindTaclet(new Name("CHEAT_ASSUME"), applPart, ImmutableList.of(goal),
                 ImmutableList.of(),
                 new TacletAttributes("assume", null), DefaultImmutableMap.nilMap(), ChoiceExpr.TRUE,
-                ImmutableSet.empty(), 0); // TODO 0 für advanceTraceCount korrekt?
+                ImmutableSet.empty());
     }
 
     public AssumeCommand() {

@@ -10,6 +10,7 @@ import java.util.List;
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.proof.Goal;
 import de.uka.ilkd.key.rule.*;
+import de.uka.ilkd.key.rule.retracing.RetracingTaclet;
 import de.uka.ilkd.key.util.Debug;
 
 import org.key_project.logic.op.sv.SchemaVariable;
@@ -108,6 +109,15 @@ public abstract class TacletAppContainer extends RuleAppContainer {
         // never returns a value less than zero
         final long localage = p_initial ? -1 : p_goal.getTime();
         final RuleAppCost cost = withAge(p_ageFreeCost, p_goal);
+
+        if (p_app.taclet() instanceof RetracingTaclet retracingTaclet) {
+            if (p_pio == null) {
+                throw new IllegalStateException("NoFindTaclets are not supported for trace-state-dependent taclets: " + p_app.taclet());
+            }
+            return new RetracingFindTacletAppContainer(p_app, p_pio, p_ageFreeCost, p_ageFreeCostIsRegular, cost,
+                p_goal, localage, retracingTaclet.getTracePattern());
+        }
+
         if (p_pio == null) {
             return new NoFindTacletAppContainer(p_app, p_ageFreeCost, p_ageFreeCostIsRegular, cost,
                 localage);

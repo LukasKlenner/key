@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: GPL-2.0-only */
 package de.uka.ilkd.key.rule;
 
-import de.uka.ilkd.key.logic.BoundVarsVisitor;
-import de.uka.ilkd.key.logic.JTerm;
-import org.jspecify.annotations.NonNull;
+import de.uka.ilkd.key.logic.*;
+
 import org.key_project.logic.ChoiceExpr;
 import org.key_project.logic.Name;
 import org.key_project.logic.SyntaxElement;
@@ -20,6 +19,8 @@ import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.ImmutableMap;
 import org.key_project.util.collection.ImmutableSet;
 
+import org.jspecify.annotations.NonNull;
+
 
 /**
  * An abstract class to represent Taclets with a find part. This means, they have to be attached to
@@ -29,64 +30,61 @@ import org.key_project.util.collection.ImmutableSet;
  * the find part somewhere in the sequent ({@link RewriteTaclet}).
  */
 public abstract class FindTaclet extends Taclet {
-    /**
-     * Set of schema variables of the assumes sequent and the (optional) find expression/sequent
-     */
+    /** Set of schema variables of the assumes sequent and the (optional) find expression/sequent */
     private ImmutableSet<SchemaVariable> assumesAndFindSchemaVariables = null;
 
     /**
      * creates a FindTaclet
      *
-     * @param name          the Name of the taclet
-     * @param applPart      the TacletApplPart that contains the if-sequent, the not-free and new-vars
-     *                      conditions
+     * @param name the Name of the taclet
+     * @param applPart the TacletApplPart that contains the if-sequent, the not-free and new-vars
+     *        conditions
      * @param goalTemplates a IList<TacletGoalTemplate> that contains all goaltemplates of the
-     *                      taclet (these are the instructions used to create new goals when applying the Taclet)
-     * @param ruleSets      a ImmutableList that contains all rule sets the Taclet is attached to
-     * @param attrs         the TacletAttributes encoding if the Taclet is non-interactive, recursive or
-     *                      something like that
-     * @param find          the Term that is the pattern that has to be found in a sequent and the places
-     *                      where it matches the Taclet can be applied
-     * @param prefixMap     a ImmutableMap that contains the prefix for each
-     *                      SchemaVariable in the Taclet
+     *        taclet (these are the instructions used to create new goals when applying the Taclet)
+     * @param ruleSets a ImmutableList that contains all rule sets the Taclet is attached to
+     * @param attrs the TacletAttributes encoding if the Taclet is non-interactive, recursive or
+     *        something like that
+     * @param find the Term that is the pattern that has to be found in a sequent and the places
+     *        where it matches the Taclet can be applied
+     * @param prefixMap a ImmutableMap that contains the prefix for each
+     *        SchemaVariable in the Taclet
      */
     protected FindTaclet(Name name, TacletApplPart applPart,
-                         ImmutableList<TacletGoalTemplate> goalTemplates,
-                         ImmutableList<RuleSet> ruleSets,
-                         TacletAttributes attrs, SyntaxElement find,
-                         ImmutableMap<@NonNull SchemaVariable, org.key_project.prover.rules.TacletPrefix> prefixMap,
-                         ChoiceExpr choices, boolean surviveSymbExec,
-                         ImmutableSet<TacletAnnotation> tacletAnnotations,
-                         int advanceTraceCount) {
+            ImmutableList<TacletGoalTemplate> goalTemplates,
+            ImmutableList<RuleSet> ruleSets,
+            TacletAttributes attrs, SyntaxElement find,
+            ImmutableMap<@NonNull SchemaVariable, org.key_project.prover.rules.TacletPrefix> prefixMap,
+            ChoiceExpr choices, boolean surviveSymbExec,
+            ImmutableSet<TacletAnnotation> tacletAnnotations) {
         super(name, find, applPart, goalTemplates, ruleSets, attrs, prefixMap, choices,
-                surviveSymbExec, tacletAnnotations, advanceTraceCount);
+            surviveSymbExec,
+            tacletAnnotations);
     }
 
     /**
      * creates a FindTaclet
      *
-     * @param name          the Name of the taclet
-     * @param applPart      the TacletApplPart that contains the if-sequent, the not-free and new-vars
-     *                      conditions
+     * @param name the Name of the taclet
+     * @param applPart the TacletApplPart that contains the if-sequent, the not-free and new-vars
+     *        conditions
      * @param goalTemplates an ImmutableList that contains all goaltemplates of the
-     *                      taclet (these are the instructions used to create new goals when applying the Taclet)
-     * @param ruleSets      an ImmutableList that contains all rule sets the Taclet is attached to
-     * @param attrs         the TacletAttributes encoding if the Taclet is non-interactive, recursive or
-     *                      something like that
-     * @param find          the Term that is the pattern that has to be found in a sequent and the places
-     *                      where it matches the Taclet can be applied
-     * @param prefixMap     an ImmutableMap that contains the prefix for each
-     *                      SchemaVariable in the Taclet
+     *        taclet (these are the instructions used to create new goals when applying the Taclet)
+     * @param ruleSets an ImmutableList that contains all rule sets the Taclet is attached to
+     * @param attrs the TacletAttributes encoding if the Taclet is non-interactive, recursive or
+     *        something like that
+     * @param find the Term that is the pattern that has to be found in a sequent and the places
+     *        where it matches the Taclet can be applied
+     * @param prefixMap an ImmutableMap that contains the prefix for each
+     *        SchemaVariable in the Taclet
      */
     protected FindTaclet(Name name, TacletApplPart applPart,
-                         ImmutableList<TacletGoalTemplate> goalTemplates,
-                         ImmutableList<RuleSet> ruleSets,
-                         TacletAttributes attrs, SyntaxElement find,
-                         ImmutableMap<@NonNull SchemaVariable, org.key_project.prover.rules.TacletPrefix> prefixMap,
-                         ChoiceExpr choices, ImmutableSet<TacletAnnotation> tacletAnnotations,
-                         int advanceTraceCount) {
+            ImmutableList<TacletGoalTemplate> goalTemplates,
+            ImmutableList<RuleSet> ruleSets,
+            TacletAttributes attrs, SyntaxElement find,
+            ImmutableMap<@NonNull SchemaVariable, org.key_project.prover.rules.TacletPrefix> prefixMap,
+            ChoiceExpr choices, ImmutableSet<TacletAnnotation> tacletAnnotations) {
         this(name, applPart, goalTemplates, ruleSets, attrs, find, prefixMap, choices, false,
-                tacletAnnotations, advanceTraceCount);
+            tacletAnnotations);
     }
 
     /**
@@ -121,9 +119,7 @@ public abstract class FindTaclet extends Taclet {
         return bvv.getBoundVariables();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
         if (!super.equals(o)) {
@@ -132,9 +128,7 @@ public abstract class FindTaclet extends Taclet {
         return find.equals(((FindTaclet) o).find);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public int hashCode() {
         return 13 * super.hashCode() + find.hashCode();
     }

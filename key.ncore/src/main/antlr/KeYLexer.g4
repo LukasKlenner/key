@@ -214,8 +214,12 @@ IS_UNTRACED_METHOD
    : '\\isUntracedMethod'
    ;
 
-NEXT_TRACE_PATTERN
-   : '\\nextTracePattern'
+TRACE_PATTERN
+   : '\\tracePattern'
+   ;
+
+CATCH_COUNT
+   : '\\catchCount'
    ;
 
 IS_UNTRACED_FIELD

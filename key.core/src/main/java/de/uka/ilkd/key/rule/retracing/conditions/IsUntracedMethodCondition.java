@@ -1,4 +1,4 @@
-package de.uka.ilkd.key.rule.conditions;
+package de.uka.ilkd.key.rule.retracing.conditions;
 
 import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.ProgramElement;
@@ -11,7 +11,6 @@ import de.uka.ilkd.key.java.ast.reference.ReferencePrefix;
 import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.rule.VariableConditionAdapter;
 import de.uka.ilkd.key.rule.inst.SVInstantiations;
-import de.uka.ilkd.key.rule.tracing.TracingRuleUtil;
 
 import org.key_project.logic.SyntaxElement;
 import org.key_project.logic.op.sv.SchemaVariable;
@@ -87,12 +86,16 @@ public final class IsUntracedMethodCondition extends VariableConditionAdapter {
         if (method == null) {
             return false;
         }
-        return negation ^ TracingRuleUtil.isUntracedMethod(method);
+        return negation ^ isUntracedMethod(method);
     }
 
     @Override
     public String toString() {
         return (negation ? "\\not " : "") + "\\isUntracedMethod(" +
             (receiver != null ? receiver + ", " : "") + methname + ", " + args + ")";
+    }
+
+    private static boolean isUntracedMethod(IProgramMethod method) {
+        return method.getName().startsWith("$") || method.isStatic() || method.isPrivate();
     }
 }

@@ -4,7 +4,6 @@ import de.uka.ilkd.key.rule.BuiltInRule;
 import de.uka.ilkd.key.rule.LoopApplyHeadRule;
 import de.uka.ilkd.key.rule.LoopScopeInvariantRule;
 import de.uka.ilkd.key.rule.WhileInvariantRule;
-import de.uka.ilkd.key.rule.tracing.TraceTryRule;
 import org.key_project.util.collection.ImmutableList;
 
 public class JavaProfileWithTracing extends JavaProfile {
@@ -46,16 +45,13 @@ public class JavaProfileWithTracing extends JavaProfile {
         ImmutableList<BuiltInRule> builtInRules = super.initBuiltInRules();
 
         // Remove loop-related built-in rules — traced proofs use loopUnwind + trace if-taclets instead
+        // TODO muss man das wirklich entfernen?
         builtInRules = builtInRules
                 .removeFirst(WhileInvariantRule.INSTANCE)
                 .removeFirst(LoopScopeInvariantRule.INSTANCE)
                 .removeFirst(LoopApplyHeadRule.INSTANCE);
 
-        // must stay at the front of list according to comment in JavaProfile.initBuiltInRules()
-        BuiltInRule first = builtInRules.get(0);
-        return builtInRules.removeFirst(first)
-                .prepend(TraceTryRule.INSTANCE)
-                .prepend(first);
+        return builtInRules;
     }
 
 }

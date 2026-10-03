@@ -1,11 +1,7 @@
-package de.uka.ilkd.key.rule.conditions;
+package de.uka.ilkd.key.rule.retracing.conditions;
 
 import de.uka.ilkd.key.java.Services;
-import de.uka.ilkd.key.java.ast.abstraction.Type;
-import de.uka.ilkd.key.java.ast.declaration.ClassDeclaration;
 import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
-import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
-import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.rule.VariableConditionAdapter;
 import de.uka.ilkd.key.rule.inst.SVInstantiations;
 import org.key_project.logic.SyntaxElement;

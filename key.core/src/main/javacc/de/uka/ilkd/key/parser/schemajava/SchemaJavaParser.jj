@@ -4145,6 +4145,7 @@ RKeYMetaConstruct KeYMetaConstructStatement() :
     ExecCtxtSVWrapper execsv = null;
     JumpLabelSVWrapper innerLabel, outerLabel;
     ASTList<LoopInitializer> loopInit;
+    ProgramVariableSVWrapper finallyBlock = null;
 }
 { (
    "#unwind-loop" "("
@@ -4332,6 +4333,21 @@ RKeYMetaConstruct KeYMetaConstructStatement() :
 		  setPrefixInfo(result);
 		  result.setChild(stat);
 		  result.setName("#traced-switch-statement");
+		  return result;
+	      }
+	  )
+	  |
+	  (
+	   "#traced-throw" {begin=token();} "(" sv = VariableSV() "," [ LOOKAHEAD(2) finallyBlock = VariableSV() "," ] stat = Statement() ")" ";"
+	      {
+		  result = factory.createRKeYMetaConstruct();
+		  setPrefixInfo(result);
+		  result.setChild(stat);
+		  result.setSV(cs);
+          if (finallyBlock != null) {
+              result.addSV(finallyBlock);
+          }
+		  result.setName("#traced-throw");
 		  return result;
 	      }
 	  )
