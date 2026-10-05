@@ -62,6 +62,8 @@ public abstract class ProgramSVSort extends SortImpl {
 
     public static final ProgramSVSort EXPRESSION = new ExpressionSort();
 
+    public static final ProgramSVSort PASSIVEEXPRESSION = new PassiveExpressionSort();
+
 
     // ----------- Initialisation and Creation expressions -------------------
 
@@ -532,6 +534,23 @@ public abstract class ProgramSVSort extends SortImpl {
         @Override
         protected boolean canStandFor(ProgramElement pe, Services services) {
             return (pe instanceof Expression);
+        }
+
+    }
+
+    private static class PassiveExpressionSort extends ProgramSVSort {
+
+        public PassiveExpressionSort() {
+            super(new Name("PassiveExpression"));
+        }
+
+        protected PassiveExpressionSort(Name n) {
+            super(n);
+        }
+
+        @Override
+        protected boolean canStandFor(ProgramElement pe, Services services) {
+            return (pe instanceof PassiveExpression);
         }
 
     }
