@@ -21,10 +21,8 @@ import de.uka.ilkd.key.java.ast.statement.Then;
 import de.uka.ilkd.key.java.ast.statement.Try;
 import de.uka.ilkd.key.logic.VariableNamer;
 import de.uka.ilkd.key.logic.op.ProgramSV;
-import de.uka.ilkd.key.proof.retracing.TracingState;
 import de.uka.ilkd.key.rule.inst.SVInstantiations;
 import de.uka.ilkd.key.rule.metaconstruct.ProgramTransformer;
-import de.uka.ilkd.key.rule.metaconstruct.SwitchToIf;
 import org.key_project.logic.Name;
 import org.key_project.logic.op.sv.SchemaVariable;
 

@@ -39,6 +39,7 @@ import de.uka.ilkd.key.logic.sort.ProgramSVSort;
 import de.uka.ilkd.key.nparser.KeyAst;
 import de.uka.ilkd.key.parser.ParserException;
 import de.uka.ilkd.key.rule.metaconstruct.*;
+import de.uka.ilkd.key.rule.retracing.metaconstruct.TracedInitArrayCreation;
 import de.uka.ilkd.key.rule.retracing.metaconstruct.TracedMethodCall;
 import de.uka.ilkd.key.rule.retracing.metaconstruct.TracedSwitchStatement;
 import de.uka.ilkd.key.rule.retracing.metaconstruct.TracedThrowStatement;
@@ -2054,7 +2055,8 @@ class JP2KeYVisitor extends GenericVisitorAdapter<Object, Void> {
                 }
                 yield new TracedThrowStatement(labels.get(0), labels.get(1), accept(n.getChild()));
             }
-
+            case "#traced-init-array-creation" ->
+                    new TracedInitArrayCreation(labels.get(0), accept(n.getChild()));
             case "#evaluate-arguments" -> new EvaluateArgs(accept(n.getChild()));
             case "#constructor-call" -> new ConstructorCall(labels.get(0), accept(n.getChild()));
             case "#special-constructor-call" -> new SpecialConstructorCall(accept(n.getChild()));
