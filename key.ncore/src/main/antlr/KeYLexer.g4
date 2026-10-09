@@ -206,10 +206,6 @@ NEW_TYPE_OF
    : '\\newTypeOf'
    ;
 
-IS_PASSIVE_EXPRESSION
-   : '\\isPassiveExpression'
-   ;
-
 IS_UNTRACED_METHOD
    : '\\isUntracedMethod'
    ;

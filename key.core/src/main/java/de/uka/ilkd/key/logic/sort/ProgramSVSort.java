@@ -3,22 +3,68 @@
  * SPDX-License-Identifier: GPL-2.0-only */
 package de.uka.ilkd.key.logic.sort;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import de.uka.ilkd.key.java.Services;
-import de.uka.ilkd.key.java.ast.*;
-import de.uka.ilkd.key.java.ast.abstraction.*;
-import de.uka.ilkd.key.java.ast.declaration.*;
-import de.uka.ilkd.key.java.ast.expression.*;
-import de.uka.ilkd.key.java.ast.expression.literal.*;
-import de.uka.ilkd.key.java.ast.expression.operator.*;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.*;
-import de.uka.ilkd.key.java.ast.reference.*;
-import de.uka.ilkd.key.java.ast.statement.*;
-import de.uka.ilkd.key.logic.*;
-import de.uka.ilkd.key.logic.op.*;
-
+import de.uka.ilkd.key.java.ast.Label;
+import de.uka.ilkd.key.java.ast.NamedProgramElement;
+import de.uka.ilkd.key.java.ast.NonTerminalProgramElement;
+import de.uka.ilkd.key.java.ast.ProgramElement;
+import de.uka.ilkd.key.java.ast.Statement;
+import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
+import de.uka.ilkd.key.java.ast.abstraction.PrimitiveType;
+import de.uka.ilkd.key.java.ast.abstraction.Type;
+import de.uka.ilkd.key.java.ast.declaration.ConstructorDeclaration;
+import de.uka.ilkd.key.java.ast.declaration.MethodDeclaration;
+import de.uka.ilkd.key.java.ast.declaration.VariableDeclaration;
+import de.uka.ilkd.key.java.ast.declaration.VariableSpecification;
+import de.uka.ilkd.key.java.ast.expression.ArrayInitializer;
+import de.uka.ilkd.key.java.ast.expression.Expression;
+import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
+import de.uka.ilkd.key.java.ast.expression.literal.Literal;
+import de.uka.ilkd.key.java.ast.expression.literal.StringLiteral;
+import de.uka.ilkd.key.java.ast.expression.operator.DLEmbeddedExpression;
+import de.uka.ilkd.key.java.ast.expression.operator.Instanceof;
+import de.uka.ilkd.key.java.ast.expression.operator.Intersect;
+import de.uka.ilkd.key.java.ast.expression.operator.Negative;
+import de.uka.ilkd.key.java.ast.expression.operator.New;
+import de.uka.ilkd.key.java.ast.expression.operator.NewArray;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.AllFields;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.AllObjects;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqConcat;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqGet;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqIndexOf;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqLength;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqPut;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqReverse;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqSingleton;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqSub;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SetMinus;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.SetUnion;
+import de.uka.ilkd.key.java.ast.expression.operator.adt.Singleton;
+import de.uka.ilkd.key.java.ast.reference.ConstructorReference;
+import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
+import de.uka.ilkd.key.java.ast.reference.FieldReference;
+import de.uka.ilkd.key.java.ast.reference.MetaClassReference;
+import de.uka.ilkd.key.java.ast.reference.MethodName;
+import de.uka.ilkd.key.java.ast.reference.MethodReference;
+import de.uka.ilkd.key.java.ast.reference.ReferencePrefix;
+import de.uka.ilkd.key.java.ast.reference.SpecialConstructorReference;
+import de.uka.ilkd.key.java.ast.reference.SuperReference;
+import de.uka.ilkd.key.java.ast.reference.ThisReference;
+import de.uka.ilkd.key.java.ast.reference.TypeReference;
+import de.uka.ilkd.key.java.ast.statement.Catch;
+import de.uka.ilkd.key.java.ast.statement.Ccatch;
+import de.uka.ilkd.key.java.ast.statement.For;
+import de.uka.ilkd.key.java.ast.statement.ForUpdates;
+import de.uka.ilkd.key.java.ast.statement.Guard;
+import de.uka.ilkd.key.java.ast.statement.LoopInit;
+import de.uka.ilkd.key.java.ast.statement.MethodBodyStatement;
+import de.uka.ilkd.key.java.ast.statement.Switch;
+import de.uka.ilkd.key.logic.JTerm;
+import de.uka.ilkd.key.logic.ProgramElementName;
+import de.uka.ilkd.key.logic.op.IProgramMethod;
+import de.uka.ilkd.key.logic.op.ProgramConstant;
+import de.uka.ilkd.key.logic.op.ProgramSV;
+import de.uka.ilkd.key.logic.op.ProgramVariable;
 import org.key_project.logic.Name;
 import org.key_project.logic.Named;
 import org.key_project.logic.Namespace;
@@ -26,9 +72,11 @@ import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.logic.sort.Sort;
 import org.key_project.util.ExtList;
 import org.key_project.util.collection.DefaultImmutableSet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Special "sorts" used for schema variables matching program constructs (class ProgramSV). Not
@@ -58,11 +106,13 @@ public abstract class ProgramSVSort extends SortImpl {
     public static final ProgramSVSort NONSIMPLEEXPRESSION = new NonSimpleExpressionSort();
 
     public static final ProgramSVSort NONSIMPLEEXPRESSIONNOCLASSREFERENCE =
-        new NonSimpleExpressionNoClassReferenceSort();
+            new NonSimpleExpressionNoClassReferenceSort();
 
     public static final ProgramSVSort EXPRESSION = new ExpressionSort();
 
     public static final ProgramSVSort PASSIVEEXPRESSION = new PassiveExpressionSort();
+
+    public static final ProgramSVSort NONSIMPLEORPASSIVEEXPRESSION = new NonSimpleOrPassiveExpressionSort();
 
 
     // ----------- Initialisation and Creation expressions -------------------
@@ -76,13 +126,13 @@ public abstract class ProgramSVSort extends SortImpl {
     public static final ProgramSVSort ARRAYINITIALIZER = new ArrayInitializerSVSort();
 
     public static final ProgramSVSort SPECIALCONSTRUCTORREFERENCE =
-        new SpecialConstructorReferenceSort();
+            new SpecialConstructorReferenceSort();
 
 
     // ----------- Expressions with restrictions on kind of type -------------
 
     public static final NonSimpleMethodReferenceSort NONSIMPLEMETHODREFERENCE =
-        new NonSimpleMethodReferenceSort();
+            new NonSimpleMethodReferenceSort();
 
 
     // ----------- Types of Statement Program SVs -----------------------------
@@ -119,99 +169,99 @@ public abstract class ProgramSVSort extends SortImpl {
     // -----------Specials for primitive types---------------------------------
 
     public static final ProgramSVSort JAVABOOLEANEXPRESSION =
-        new ExpressionSpecialPrimitiveTypeSort("JavaBooleanExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BOOLEAN });
+            new ExpressionSpecialPrimitiveTypeSort("JavaBooleanExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BOOLEAN});
 
     public static final ProgramSVSort SIMPLEJAVABYTEEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaByteExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BYTE });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaByteExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BYTE});
 
     public static final ProgramSVSort SIMPLEJAVACHAREXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaCharExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_CHAR });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaCharExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_CHAR});
 
     public static final ProgramSVSort SIMPLEJAVASHORTEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaShortExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_SHORT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaShortExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_SHORT});
 
     public static final ProgramSVSort SIMPLEJAVAINTEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaIntExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_INT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaIntExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_INT});
 
     public static final ProgramSVSort SIMPLEJAVALONGEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaLongExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_LONG });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaLongExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_LONG});
 
     public static final ProgramSVSort SIMPLEJAVAFLOATEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaFloatExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_FLOAT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaFloatExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_FLOAT});
 
     public static final ProgramSVSort SIMPLEJAVADOUBLEEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaDoubleExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_DOUBLE });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaDoubleExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_DOUBLE});
 
     public static final ProgramSVSort SIMPLEJAVABYTESHORTEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaByteShortExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaByteShortExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT});
 
     public static final ProgramSVSort SIMPLEJAVABYTESHORTINTEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaByteShortIntExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
-                PrimitiveType.JAVA_INT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaByteShortIntExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
+                            PrimitiveType.JAVA_INT});
 
 
     public static final ProgramSVSort SIMPLEANYJAVATYPEEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("AnyJavaTypeExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
-                PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG });
+            new SimpleExpressionSpecialPrimitiveTypeSort("AnyJavaTypeExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
+                            PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG});
 
 
     public static final ProgramSVSort SIMPLEANYJAVANUMBERTYPEEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("AnyJavaNumberTypeExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
-                PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG, PrimitiveType.JAVA_CHAR });
+            new SimpleExpressionSpecialPrimitiveTypeSort("AnyJavaNumberTypeExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
+                            PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG, PrimitiveType.JAVA_CHAR});
 
     public static final ProgramSVSort SIMPLEJAVASHORTINTLONGEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaShortIntLongExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_SHORT, PrimitiveType.JAVA_INT,
-                PrimitiveType.JAVA_LONG });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaShortIntLongExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_SHORT, PrimitiveType.JAVA_INT,
+                            PrimitiveType.JAVA_LONG});
 
     public static final ProgramSVSort SIMPLEJAVAINTLONGEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaIntLongExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaIntLongExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG});
 
     public static final ProgramSVSort SIMPLEJAVACHARBYTESHORTINTEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaCharByteShortIntExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_CHAR, PrimitiveType.JAVA_BYTE,
-                PrimitiveType.JAVA_SHORT, PrimitiveType.JAVA_INT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaCharByteShortIntExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_CHAR, PrimitiveType.JAVA_BYTE,
+                            PrimitiveType.JAVA_SHORT, PrimitiveType.JAVA_INT});
 
     public static final ProgramSVSort SIMPLEJAVABIGINTEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("JavaBigintExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BIGINT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("JavaBigintExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BIGINT});
 
 
     public static final ProgramSVSort SIMPLEANYNUMBERTYPEEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("AnyNumberTypeExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
-                PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG, PrimitiveType.JAVA_CHAR,
-                PrimitiveType.JAVA_BIGINT });
+            new SimpleExpressionSpecialPrimitiveTypeSort("AnyNumberTypeExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BYTE, PrimitiveType.JAVA_SHORT,
+                            PrimitiveType.JAVA_INT, PrimitiveType.JAVA_LONG, PrimitiveType.JAVA_CHAR,
+                            PrimitiveType.JAVA_BIGINT});
 
     public static final ProgramSVSort SIMPLEJAVABOOLEANEXPRESSION =
-        new SimpleExpressionSpecialPrimitiveTypeSort("SimpleJavaBooleanExpression",
-            new PrimitiveType[] { PrimitiveType.JAVA_BOOLEAN });
+            new SimpleExpressionSpecialPrimitiveTypeSort("SimpleJavaBooleanExpression",
+                    new PrimitiveType[]{PrimitiveType.JAVA_BOOLEAN});
 
     public static final ProgramSVSort SIMPLESTRINGEXPRESSION =
-        new SimpleExpressionStringSort("SimpleStringExpression");
+            new SimpleExpressionStringSort("SimpleStringExpression");
 
     public static final ProgramSVSort SIMPLENONSTRINGOBJECTEXPRESSION =
-        new SimpleExpressionNonStringObjectSort("SimpleNonStringObjectExpression");
+            new SimpleExpressionNonStringObjectSort("SimpleNonStringObjectExpression");
 
 
     // --------------- Specials excepting some primitive types--------------
 
     public static final ProgramSVSort SIMPLEEXPRESSIONNONFLOATDOUBLE =
-        new SimpleExpressionExceptingTypeSort("SimpleExpressionNonFloatDouble",
-            new PrimitiveType[] { PrimitiveType.JAVA_FLOAT, PrimitiveType.JAVA_DOUBLE });
+            new SimpleExpressionExceptingTypeSort("SimpleExpressionNonFloatDouble",
+                    new PrimitiveType[]{PrimitiveType.JAVA_FLOAT, PrimitiveType.JAVA_DOUBLE});
 
     // --------------- Specials that can be get rid of perhaps--------------
 
@@ -230,19 +280,19 @@ public abstract class ProgramSVSort extends SortImpl {
     public static final ProgramSVSort SWITCH = new SwitchSVSort();
 
     public static final ProgramSVSort CONSTANT_PRIMITIVE_TYPE_VARIABLE =
-        new ConstantProgramVariableSort(new Name("ConstantPrimitiveTypeVariable"), false);
+            new ConstantProgramVariableSort(new Name("ConstantPrimitiveTypeVariable"), false);
 
     public static final ProgramSVSort CONSTANT_STRING_VARIABLE =
-        new ConstantProgramVariableSort(new Name("ConstantStringVariable"), true);
+            new ConstantProgramVariableSort(new Name("ConstantStringVariable"), true);
 
 
     public static final ProgramSVSort VARIABLEINIT =
-        new ProgramSVSort(new Name("VariableInitializer")) {
-            @Override
-            public boolean canStandFor(ProgramElement pe, Services services) {
-                return true;
-            }
-        };
+            new ProgramSVSort(new Name("VariableInitializer")) {
+                @Override
+                public boolean canStandFor(ProgramElement pe, Services services) {
+                    return true;
+                }
+            };
 
     public static final ProgramSVSort NONSTRINGLITERAL = new NonStringLiteralSort();
     public static final ProgramSVSort STRINGLITERAL = new StringLiteralSort();
@@ -555,6 +605,23 @@ public abstract class ProgramSVSort extends SortImpl {
 
     }
 
+    private static class NonSimpleOrPassiveExpressionSort extends ProgramSVSort {
+
+        public NonSimpleOrPassiveExpressionSort() {
+            super(new Name("NonSimpleOrPassiveExpression"));
+        }
+
+        protected NonSimpleOrPassiveExpressionSort(Name n) {
+            super(n);
+        }
+
+        @Override
+        protected boolean canStandFor(ProgramElement pe, Services services) {
+            return NONSIMPLEEXPRESSION.canStandFor(pe, services) && !(pe instanceof PassiveExpression);
+        }
+
+    }
+
     /**
      * This sort represents a type of program schema variables that match only string literals, e.g.
      * "abc"
@@ -713,7 +780,6 @@ public abstract class ProgramSVSort extends SortImpl {
     }
 
 
-
     // ----------- Types of Statement Program SVs -----------------------------
 
     /**
@@ -800,7 +866,7 @@ public abstract class ProgramSVSort extends SortImpl {
             final MethodDeclaration methodDeclaration = pm.getMethodDeclaration();
 
             return !(// pm.isModel() ||
-            methodDeclaration.getBody() == null)
+                    methodDeclaration.getBody() == null)
                     || (methodDeclaration instanceof ConstructorDeclaration);
         }
 
@@ -929,7 +995,7 @@ public abstract class ProgramSVSort extends SortImpl {
             }
             if (matchName != null) {
                 return matchName.equals(
-                    ((TypeReference) (check)).getKeYJavaType().getJavaType().getFullName());
+                        ((TypeReference) (check)).getKeYJavaType().getJavaType().getFullName());
             }
             return true;
         }
@@ -962,7 +1028,7 @@ public abstract class ProgramSVSort extends SortImpl {
     /**
      * This sort represents a type of program schema variables that match on names of method
      * references, i.e. the "m" of o.m(p1,pn).
-     *
+     * <p>
      * It can also be made to match only specific method names defined by the parameter "name".
      */
     private static class MethodNameSort extends ProgramSVSort {

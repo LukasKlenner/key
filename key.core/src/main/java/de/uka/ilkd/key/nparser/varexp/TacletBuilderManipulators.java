@@ -16,7 +16,6 @@ import de.uka.ilkd.key.logic.op.ProgramSV;
 import de.uka.ilkd.key.logic.sort.GenericSort;
 import de.uka.ilkd.key.rule.conditions.*;
 import de.uka.ilkd.key.rule.retracing.conditions.CatchCountCondition;
-import de.uka.ilkd.key.rule.retracing.conditions.IsPassiveExpression;
 import de.uka.ilkd.key.rule.retracing.conditions.IsUntracedFieldCondition;
 import de.uka.ilkd.key.rule.retracing.conditions.IsUntracedMethodCondition;
 import de.uka.ilkd.key.rule.tacletbuilder.TacletBuilder;
@@ -374,9 +373,6 @@ public class TacletBuilderManipulators {
     public static final AbstractConditionBuilder IS_IN_STRICTFP =
         new ConstructorBasedBuilder("isInStrictFp", InStrictFp.class);
 
-    public static final AbstractConditionBuilder IS_PASSIVE_EXPRESSION =
-        new ConstructorBasedBuilder("isPassiveExpression", IsPassiveExpression.class, SV);
-
     public static final AbstractConditionBuilder IS_UNTRACED_METHOD_2 =
             new ConstructorBasedBuilder("isUntracedMethod", IsUntracedMethodCondition.class, SV, SV);
 
@@ -403,7 +399,7 @@ public class TacletBuilderManipulators {
             META_DISJOINT,
             IS_OBSERVER, CONSTANT, HAS_SORT, LABEL, NEW_LABEL, HAS_ELEM_SORT, IS_IN_STRICTFP,
                 IS_UNTRACED_METHOD_2, IS_UNTRACED_METHOD_3,
-            IS_UNTRACED_FIELD, CATCH_COUNT, IS_PASSIVE_EXPRESSION);
+            IS_UNTRACED_FIELD, CATCH_COUNT);
         register(STORE_TERM_IN, STORE_STMT_IN, HAS_INVARIANT, GET_INVARIANT, GET_FREE_INVARIANT,
             GET_VARIANT, IS_LABELED);
         loadWithServiceLoader();

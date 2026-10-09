@@ -261,7 +261,6 @@ varexpId: // weigl, 2021-03-12: This will be later just an arbitrary identifier.
   | GET_VARIANT
   | IS_LABELED
   | ISINSTRICTFP
-  | IS_PASSIVE_EXPRESSION
   | IS_UNTRACED_METHOD
   | IS_UNTRACED_FIELD
   | CATCH_COUNT
