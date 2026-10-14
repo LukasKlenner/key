@@ -49,7 +49,7 @@ public class TracedInitArrayCreation extends InitArrayCreation {
         Expression indexExpr = KeYJavaASTFactory.intLiteral(p_index);
         Expression lhs = KeYJavaASTFactory.arrayFieldAccess(p_array, indexExpr);
 
-        return KeYJavaASTFactory.assign(lhs, KeYJavaASTFactory.passiveExpression(p_initializer));
+        return KeYJavaASTFactory.assign(KeYJavaASTFactory.passiveExpression(lhs), p_initializer);
     }
 
     @Override
