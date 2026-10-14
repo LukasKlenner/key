@@ -17,7 +17,7 @@ public class CatchCountCondition implements VariableCondition {
     private final SchemaVariable catchCountVar;
     private final SchemaVariable catchListVar;
 
-    public CatchCountCondition(SchemaVariable catchCountVar, SchemaVariable catchListVar, boolean negated) {
+    public CatchCountCondition(SchemaVariable catchCountVar, SchemaVariable catchListVar) {
         this.catchCountVar = catchCountVar;
         this.catchListVar = catchListVar;
     }

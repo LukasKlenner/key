@@ -2,8 +2,11 @@ package de.uka.ilkd.key.proof.retracing;
 
 import de.uka.ilkd.key.java.ast.expression.literal.IntLiteral;
 import de.uka.ilkd.key.rule.TacletApp;
-import de.uka.ilkd.key.rule.retracing.AdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.RetracingTaclet;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.BasicAdvanceTraceInformation;
+import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.prover.rules.RuleApp;
 import org.key_project.util.collection.ImmutableList;
 
@@ -17,6 +20,10 @@ public class TracingState {
 
     private Long lastConsumedCatchIndex = null;
 
+    private ImmutableList<Integer> currentDimensions = ImmutableList.of();
+
+    private boolean checkingArrayDimensions = false;
+
     private ImmutableList<TraceElement> traceElementsForCurrentRuleApp = ImmutableList.of();
 
     public TracingState(ImmutableList<TraceElement> traceElements, FunctionDatabase functionDatabase) {
@@ -29,6 +36,7 @@ public class TracingState {
         this.functionDatabase = other.functionDatabase;
         this.currentCatchCount = other.currentCatchCount;
         this.lastConsumedCatchIndex = other.lastConsumedCatchIndex;
+        this.currentDimensions = other.currentDimensions;
         this.traceElementsForCurrentRuleApp = other.traceElementsForCurrentRuleApp;
     }
 
@@ -46,8 +54,8 @@ public class TracingState {
             }
         }
         throw new IllegalStateException(
-            "No " + type.getSimpleName() + " found in consumed trace elements: "
-                + traceElementsForCurrentRuleApp);
+                "No " + type.getSimpleName() + " found in consumed trace elements: "
+                        + traceElementsForCurrentRuleApp);
     }
 
     /**
@@ -72,79 +80,48 @@ public class TracingState {
         }
         AdvanceTraceInformation advanceTraceInformation = retracingTaclet.getAdvanceTraceInformation();
 
-        if (advanceTraceInformation == null) {
-            return;
+        // cleanup only at after the next rule application, because we still need the currentDimensions for the current array initialization
+        if (!checkingArrayDimensions) {
+            currentDimensions = ImmutableList.of();
         }
 
-        traceElementsForCurrentRuleApp = traceElements.take(advanceTraceInformation.traceElementsCount());
-        traceElements = traceElements.skip(advanceTraceInformation.traceElementsCount());
+        int traceElementsCount = switch (advanceTraceInformation) {
+            case BasicAdvanceTraceInformation(int count) -> count;
+            case null -> retracingTaclet.getTracePattern().getMatchedLength();
+            default -> 0;
+        };
 
-        if (advanceTraceInformation.catchCountVar() != null) {
-            IntLiteral catchCount = tacletApp.matchConditions().getInstantiations().getInstantiation(advanceTraceInformation.catchCountVar());
+        traceElementsForCurrentRuleApp = traceElements.take(traceElementsCount);
+        traceElements = traceElements.skip(traceElementsCount);
+
+        if (advanceTraceInformation instanceof AdvanceCatchTraceInformation(SchemaVariable catchCountVar)) {
+            IntLiteral catchCount = tacletApp.matchConditions().getInstantiations().getInstantiation(catchCountVar);
             currentCatchCount += catchCount.getValue();
         }
 
         for (TraceElement elem : traceElementsForCurrentRuleApp) {
-            if (elem instanceof TraceElement.Catch(long catchIndex)) {
-                if (isLastConsumedCatchIndexSet()) {
-                    throw new IllegalStateException("Last consumed catch index is already set to " + lastConsumedCatchIndex + ", but found another catch element with index " + catchIndex);
-                }
-                lastConsumedCatchIndex = catchIndex;
-            }
-        }
-    }
-
-    public boolean matchesPattern(String tracePattern) {
-
-        if (tracePattern.equals("*")) {
-            return true;
-        }
-
-        ImmutableList<TraceElement> elements = traceElements;
-
-        boolean negated = false;
-
-        if (tracePattern.startsWith("!")) {
-            negated = true;
-            tracePattern = tracePattern.substring(1);
-        }
-
-        if (elements.size() < tracePattern.length()) {
-            return negated;
-        }
-
-        for (char c : tracePattern.toCharArray()) {
-
-            // handle special switch pattern
-            if (c == 'S') {
-                if (elements.size() < TraceElement.SWITCH_ELEMENT_COUNT) {
-                    return negated;
-                }
-
-                for (TraceElement elem : elements.take(TraceElement.SWITCH_ELEMENT_COUNT)) {
-                    if (!elem.isIfOrElse()) {
-                        return negated;
+            switch (elem) {
+                case TraceElement.Catch(long catchIndex) -> {
+                    if (isLastConsumedCatchIndexSet()) {
+                        throw new IllegalStateException("Last consumed catch index is already set to " + lastConsumedCatchIndex + ", but found another catch element with index " + catchIndex);
                     }
+                    lastConsumedCatchIndex = catchIndex;
                 }
 
-                elements = elements.skip(TraceElement.SWITCH_ELEMENT_COUNT);
-                continue;
-            }
+                // Reset the array dimension checking flag when encountering an if or else statement
+                // as they mark the check of the last dimension
+                // we do not yet clear the currentDimensions list, because we still need to access the dimensions for the current array initialization
+                case TraceElement.If() -> checkingArrayDimensions = false;
+                case TraceElement.Else() -> checkingArrayDimensions = false;
 
-            TraceElement elem = elements.head();
-            switch (c) {
-                case 'I' -> { if (!(elem instanceof TraceElement.If)) return negated; }
-                case 'O' -> { if (!(elem instanceof TraceElement.Else)) return negated; }
-                case 'C' -> { if (!(elem instanceof TraceElement.Call)) return negated; }
-                case 'T' -> { if (!(elem instanceof TraceElement.Try)) return negated; }
-                case 'J' -> { if (!(elem instanceof TraceElement.Catch)) return negated; }
-                case 'E' -> { if (!(elem instanceof TraceElement.End)) return negated; }
-                default -> throw new IllegalStateException(
-                        "Invalid trace pattern character: " + c + " in pattern " + tracePattern);
+                case TraceElement.Dim(int dimensions) -> {
+                    checkingArrayDimensions = true;
+                    currentDimensions = currentDimensions.append(dimensions);
+                }
+                default -> {
+                }
             }
-            elements = elements.tail();
         }
-        return !negated;
     }
 
     public long getCurrentCatchCount() {
@@ -170,4 +147,9 @@ public class TracingState {
     public FunctionDatabase getFunctionDatabase() {
         return functionDatabase;
     }
+
+    public int getCurrentDimension(int dimensionCount) {
+        return currentDimensions.get(currentDimensions.size() + 1 - dimensionCount);
+    }
+
 }

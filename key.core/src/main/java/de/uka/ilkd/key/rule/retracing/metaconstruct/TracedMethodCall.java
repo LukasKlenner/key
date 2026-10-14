@@ -21,6 +21,7 @@ import de.uka.ilkd.key.java.ast.reference.SuperReference;
 import de.uka.ilkd.key.java.ast.reference.ThisReference;
 import de.uka.ilkd.key.java.ast.reference.TypeRef;
 import de.uka.ilkd.key.java.ast.reference.TypeReference;
+import de.uka.ilkd.key.java.ast.statement.MethodBodyStatement;
 import de.uka.ilkd.key.logic.op.IProgramMethod;
 import de.uka.ilkd.key.logic.op.IProgramVariable;
 import de.uka.ilkd.key.logic.op.ProgramSV;
@@ -72,6 +73,16 @@ public final class TracedMethodCall extends ProgramTransformer {
                         : (ExecutionContext) svInst.getInstantiation(execContextSV);
 
         MethodReference methRef = (MethodReference) pe;
+
+        ReferencePrefix refPrefix = methRef.getReferencePrefix();
+        if (refPrefix == null) {
+            if (execContext.getRuntimeInstance() == null) {
+                refPrefix = execContext.getTypeReference();
+            } else {
+                refPrefix = execContext.getRuntimeInstance();
+            }
+        }
+
         KeYJavaType staticPrefixType = getStaticPrefixType(methRef.getReferencePrefix(), services, execContext);
 
         IProgramMethod pm = execContext == null
@@ -85,16 +96,24 @@ public final class TracedMethodCall extends ProgramTransformer {
         Statement[] paramDecl = createParamAssignments(paramSpecs, methDecl);
         ImmutableArray<Expression> arguments = getVariables(paramSpecs);
 
+        MethodBodyStatement methodBody;
+
+        if (refPrefix instanceof SuperReference) {
+            methodBody = handleSuperReference(services, execContext, methRef, pvar, arguments);
+        } else {
+            methodBody = KeYJavaASTFactory.methodBody(
+                    pvar,
+                    resolveReceiver(services, execContext, methRef),
+                    resolveTargetMethod(services, execContext, methRef),
+                    arguments
+            );
+        }
+
         return new ProgramElement[]{
                 KeYJavaASTFactory.insertStatementInBlock(
                         paramDecl,
-                        KeYJavaASTFactory.block(
-                                KeYJavaASTFactory.methodBody(
-                                        pvar,
-                                        resolveReceiver(services, execContext, methRef),
-                                        resolveTargetMethod(services, execContext, methRef),
-                                        arguments
-                                )))
+                        KeYJavaASTFactory.block(methodBody)
+                )
         };
     }
 
@@ -307,6 +326,20 @@ public final class TracedMethodCall extends ProgramTransformer {
             throw new IllegalArgumentException(
                     "Unsupported method invocation mode\n" + refPrefix.getClass());
         }
+    }
+
+    private MethodBodyStatement handleSuperReference(Services services, ExecutionContext execContext, MethodReference methRef, ProgramVariable pvar, ImmutableArray<Expression> arguments) {
+        IProgramMethod superMethod = getSuperMethod(execContext, methRef, services);
+        return KeYJavaASTFactory.methodBody(pvar, execContext.getRuntimeInstance(), superMethod, arguments);
+    }
+
+    private IProgramMethod getSuperMethod(ExecutionContext ex, MethodReference mr,
+                                          Services services) {
+        return mr.method(services, getSuperType(ex, services), ex);
+    }
+
+    private KeYJavaType getSuperType(ExecutionContext ex, Services services) {
+        return services.getJavaInfo().getSuperclass(ex.getTypeReference().getKeYJavaType());
     }
 
 }

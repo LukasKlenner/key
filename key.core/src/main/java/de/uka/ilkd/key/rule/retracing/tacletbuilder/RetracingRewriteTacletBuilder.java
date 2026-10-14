@@ -1,15 +1,16 @@
 package de.uka.ilkd.key.rule.retracing.tacletbuilder;
 
 import de.uka.ilkd.key.logic.JTerm;
-import de.uka.ilkd.key.rule.retracing.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.RetracingRewriteTaclet;
+import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import de.uka.ilkd.key.rule.tacletbuilder.RewriteTacletBuilder;
 import de.uka.ilkd.key.rule.tacletbuilder.TacletPrefixBuilder;
 import org.key_project.prover.rules.TacletApplPart;
 
 public class RetracingRewriteTacletBuilder extends RewriteTacletBuilder<RetracingRewriteTaclet> implements RetracingTacletBuilder<RetracingRewriteTacletBuilder> {
 
-    private String tracePattern;
+    private TracePattern tracePattern;
 
     private AdvanceTraceInformation advanceTraceInformation;
 
@@ -39,7 +40,7 @@ public class RetracingRewriteTacletBuilder extends RewriteTacletBuilder<Retracin
     }
 
     @Override
-    public RetracingRewriteTacletBuilder setTracePattern(String tracePattern) {
+    public RetracingRewriteTacletBuilder setTracePattern(TracePattern tracePattern) {
         this.tracePattern = tracePattern;
         return this;
     }

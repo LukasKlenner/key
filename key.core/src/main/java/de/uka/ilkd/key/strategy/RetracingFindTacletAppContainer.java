@@ -2,12 +2,13 @@ package de.uka.ilkd.key.strategy;
 
 import de.uka.ilkd.key.proof.Goal;
 import de.uka.ilkd.key.rule.NoPosTacletApp;
+import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import org.key_project.prover.sequent.PosInOccurrence;
 import org.key_project.prover.strategy.costbased.RuleAppCost;
 
 public class RetracingFindTacletAppContainer extends FindTacletAppContainer {
 
-    private final String tracePattern;
+    private final TracePattern tracePattern;
 
     RetracingFindTacletAppContainer(
             NoPosTacletApp app,
@@ -17,7 +18,7 @@ public class RetracingFindTacletAppContainer extends FindTacletAppContainer {
             RuleAppCost cost,
             Goal goal,
             long age,
-            String tracePattern
+            TracePattern tracePattern
     ) {
         super(app, pio, ageFreeCost, ageFreeCostIsRegular, cost, goal, age);
         this.tracePattern = tracePattern;
@@ -25,7 +26,7 @@ public class RetracingFindTacletAppContainer extends FindTacletAppContainer {
 
     @Override
     protected boolean isStillApplicable(Goal p_goal) {
-        if (!p_goal.proof().getServices().getTracingState().matchesPattern(tracePattern)) {
+        if (!tracePattern.matches(p_goal.proof().getServices().getTracingState().getTraceElements())) {
             return false;
         }
 

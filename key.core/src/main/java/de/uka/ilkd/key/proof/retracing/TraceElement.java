@@ -20,6 +20,10 @@ public sealed interface TraceElement {
 
     }
 
+    record Dim(int dimension) implements TraceElement {
+
+    }
+
     record If() implements TraceElement {
 
     }

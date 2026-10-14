@@ -2,8 +2,9 @@ package de.uka.ilkd.key.rule.retracing.tacletbuilder;
 
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.rule.SuccTaclet;
-import de.uka.ilkd.key.rule.retracing.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.RetracingSuccTaclet;
+import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import de.uka.ilkd.key.rule.tacletbuilder.SuccTacletBuilder;
 import de.uka.ilkd.key.rule.tacletbuilder.TacletPrefixBuilder;
 import org.key_project.prover.rules.ApplicationRestriction;
@@ -12,7 +13,7 @@ import org.key_project.prover.sequent.Sequent;
 
 public class RetracingSuccTacletBuilder extends SuccTacletBuilder implements RetracingTacletBuilder<RetracingSuccTacletBuilder> {
 
-    private String tracePattern;
+    private TracePattern tracePattern;
 
     private AdvanceTraceInformation advanceTraceInformation;
 
@@ -50,7 +51,7 @@ public class RetracingSuccTacletBuilder extends SuccTacletBuilder implements Ret
     }
 
     @Override
-    public RetracingSuccTacletBuilder setTracePattern(String tracePattern) {
+    public RetracingSuccTacletBuilder setTracePattern(TracePattern tracePattern) {
         this.tracePattern = tracePattern;
         return this;
     }

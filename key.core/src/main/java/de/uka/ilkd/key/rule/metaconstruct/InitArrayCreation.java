@@ -44,7 +44,7 @@ import org.key_project.util.collection.ImmutableArray;
 public class InitArrayCreation extends InitArray {
 
     private final SchemaVariable newObjectSV;
-    private final static String createArrayName = "$createArray";
+    protected final static String createArrayName = "$createArray";
 
     public InitArrayCreation(SchemaVariable newObjectSV, ProgramElement newExpr) {
         super("init-array-creation", newExpr);
@@ -132,7 +132,7 @@ public class InitArrayCreation extends InitArray {
     /**
      * creates an array of dimension <code>dimensions.length</code>
      */
-    private void createNDimensionalArray(LinkedList<Statement> bodyStmnts, Expression resultVar,
+    protected void createNDimensionalArray(LinkedList<Statement> bodyStmnts, Expression resultVar,
             KeYJavaType arrayType, ProgramVariable[] dimensions, Services services) {
         assert dimensions.length > 0;
         bodyStmnts.add(KeYJavaASTFactory.assign(resultVar,
@@ -164,8 +164,8 @@ public class InitArrayCreation extends InitArray {
                 KeYJavaASTFactory.postIncrementForUpdates(pv),
                 KeYJavaASTFactory.assign(
                     KeYJavaASTFactory.arrayFieldAccess((ReferencePrefix) resultVar, pv),
-                    KeYJavaASTFactory.newArray(baseTypeRef, dimensions.length - 1, baseDim,
-                        baseType)));
+                        KeYJavaASTFactory.newArray(baseTypeRef, dimensions.length - 1, baseDim,
+                                baseType)));
 
             bodyStmnts.add(forLoop);
         }

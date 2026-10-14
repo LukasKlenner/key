@@ -158,8 +158,24 @@ PROGRAMVARIABLES
    : '\\programVariables'
    ;
 
-ADVANCETRACE
+TRACE_PATTERN
+   : '\\tracePattern'
+   ;
+
+ANY_TRACE_PATTERN
+   : '\\anyTracePattern'
+   ;
+
+NEGATED_TRACE_PATTERN
+   : '\\negatedTracePattern'
+   ;
+
+ADVANCE_TRACE
    : '\\advanceTrace'
+   ;
+
+ADVANCE_CATCH_TRACE
+   : '\\advanceCatchTrace'
    ;
 
 VARCOND
@@ -208,10 +224,6 @@ NEW_TYPE_OF
 
 IS_UNTRACED_METHOD
    : '\\isUntracedMethod'
-   ;
-
-TRACE_PATTERN
-   : '\\tracePattern'
    ;
 
 CATCH_COUNT

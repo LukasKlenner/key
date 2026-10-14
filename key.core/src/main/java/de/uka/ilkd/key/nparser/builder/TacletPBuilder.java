@@ -30,10 +30,14 @@ import de.uka.ilkd.key.rule.NoFindTaclet;
 import de.uka.ilkd.key.rule.RewriteTaclet;
 import de.uka.ilkd.key.rule.Taclet;
 import de.uka.ilkd.key.rule.conditions.TypeResolver;
-import de.uka.ilkd.key.rule.retracing.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.BasicAdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingAntecTacletBuilder;
 import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingSuccTacletBuilder;
 import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingTacletBuilder;
+import de.uka.ilkd.key.rule.retracing.tracePattern.BasicTracePattern;
+import de.uka.ilkd.key.rule.retracing.tracePattern.NegatedTracePattern;
+import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import de.uka.ilkd.key.rule.tacletbuilder.AntecSuccTacletGoalTemplate;
 import de.uka.ilkd.key.rule.tacletbuilder.AntecTacletBuilder;
 import de.uka.ilkd.key.rule.tacletbuilder.NoFindTacletBuilder;
@@ -264,7 +268,17 @@ public class TacletPBuilder extends ExpressionBuilder {
                 applicationRestriction.combine(ApplicationRestriction.SUCCEDENT_POLARITY);
         }
 
-        Object tracePattern = accept(ctx.trace_pattern);
+        TracePattern tracePattern = null;
+        var tracePatternCtx = ctx.tracepattern();
+        if (tracePatternCtx != null) {
+            if (tracePatternCtx.ANY_TRACE_PATTERN() != null) {
+                tracePattern = TracePattern.ANY;
+            } else if (tracePatternCtx.NEGATED_TRACE_PATTERN() != null) {
+                tracePattern = new NegatedTracePattern(accept(tracePatternCtx));
+            } else {
+                tracePattern = new BasicTracePattern(accept(tracePatternCtx));
+            }
+        }
 
         TacletBuilder<?> b = createTacletBuilderFor(find, tracePattern, applicationRestriction, ctx);
         currentTBuilder.push(b);
@@ -648,12 +662,22 @@ public class TacletPBuilder extends ExpressionBuilder {
                 throw newSemanticError(ctx, "\\advanceTrace is only allowed for retracing taclets.");
             }
             if (ctx.advanceTrace().size() > 1) {
-                throw newSemanticError(ctx, "Only one \\advanceTrace is allowed per taclet.");
+                throw newSemanticError(ctx, "Only one \\advance*Trace is allowed per taclet.");
             }
-            retracingTacletBuilder.setAdvanceTrace(new AdvanceTraceInformation(
-                    Integer.parseInt(ctx.advanceTrace(0).traceElementsCount.getText()),
-                    accept(ctx.advanceTrace(0).catchClausesCount)
-            ));
+
+            var advanceTraceCtx = ctx.advanceTrace(0);
+
+            if (advanceTraceCtx.ADVANCE_CATCH_TRACE() != null) {
+                retracingTacletBuilder.setAdvanceTrace(new AdvanceCatchTraceInformation(
+                        accept(advanceTraceCtx.catchClausesCount)
+                ));
+            } else if (advanceTraceCtx.ADVANCE_TRACE() != null) {
+                retracingTacletBuilder.setAdvanceTrace(new BasicAdvanceTraceInformation(
+                        Integer.parseInt(advanceTraceCtx.traceElementsCount.getText())
+                ));
+            } else {
+                throw newSemanticError(ctx, "Unknown advance trace type.");
+            }
         }
 
         mapOf(ctx.triggers());
@@ -919,7 +943,7 @@ public class TacletPBuilder extends ExpressionBuilder {
 
     private @NonNull TacletBuilder<?> createTacletBuilderFor(
             Object find,
-            Object tracePattern,
+            TracePattern tracePattern,
             ApplicationRestriction applicationRestriction,
             ParserRuleContext ctx) {
 
@@ -936,7 +960,7 @@ public class TacletPBuilder extends ExpressionBuilder {
                 if (isRetracingTaclet) {
                     return new RetracingRewriteTacletBuilder()
                             .setFind(jTerm)
-                            .setTracePattern((String) tracePattern)
+                            .setTracePattern(tracePattern)
                             .setApplicationRestriction(applicationRestriction);
                 }
                 return new RewriteTacletBuilder<>().setFind(jTerm)
@@ -953,7 +977,7 @@ public class TacletPBuilder extends ExpressionBuilder {
                     if (isRetracingTaclet) {
                         return new RetracingAntecTacletBuilder()
                                 .setFind(findSeq)
-                                .setTracePattern((String) tracePattern)
+                                .setTracePattern(tracePattern)
                                 .setApplicationRestriction(applicationRestriction);
                     }
 
@@ -966,7 +990,7 @@ public class TacletPBuilder extends ExpressionBuilder {
                     if (isRetracingTaclet) {
                         return new RetracingSuccTacletBuilder()
                                 .setFind(findSeq)
-                                .setTracePattern((String) tracePattern)
+                                .setTracePattern(tracePattern)
                                 .setApplicationRestriction(applicationRestriction);
                     }
 

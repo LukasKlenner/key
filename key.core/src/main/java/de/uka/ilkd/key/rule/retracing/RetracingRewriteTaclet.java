@@ -2,6 +2,8 @@ package de.uka.ilkd.key.rule.retracing;
 
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.rule.RewriteTaclet;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import org.jspecify.annotations.NonNull;
 import org.key_project.logic.ChoiceExpr;
 import org.key_project.logic.Name;
@@ -18,7 +20,7 @@ import org.key_project.util.collection.ImmutableSet;
 
 public class RetracingRewriteTaclet extends RewriteTaclet implements RetracingTaclet {
 
-    private final String tracePattern;
+    private final TracePattern tracePattern;
 
     private final AdvanceTraceInformation advanceTraceInformation;
 
@@ -34,7 +36,7 @@ public class RetracingRewriteTaclet extends RewriteTaclet implements RetracingTa
             boolean surviveSymbExec,
             ImmutableSet<TacletAnnotation> tacletAnnotations,
             AdvanceTraceInformation advanceTraceInformation,
-            String tracePattern
+            TracePattern tracePattern
     ) {
         super(name, applPart, goalTemplates, ruleSets, attrs, find, prefixMap, choices, surviveSymbExec, tacletAnnotations);
         this.tracePattern = tracePattern;
@@ -42,7 +44,7 @@ public class RetracingRewriteTaclet extends RewriteTaclet implements RetracingTa
     }
 
     @Override
-    public String getTracePattern() {
+    public TracePattern getTracePattern() {
         return tracePattern;
     }
 

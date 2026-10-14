@@ -52,6 +52,15 @@ public class TraceFileParser {
                     long catchIndex = Long.parseLong(traceString.substring(start, i), 16);
                     elements.add(new TraceElement.Catch(catchIndex));
                 }
+                case 'D' -> {
+                    i++;
+                    int start = i;
+                    while (i < traceString.length() && isHexDigit(traceString.charAt(i))) {
+                        i++;
+                    }
+                    int dimension = Integer.parseInt(traceString.substring(start, i), 16);
+                    elements.add(new TraceElement.Dim(dimension));
+                }
                 case 'E' -> {
                     elements.add(new TraceElement.End());
                     i++;
