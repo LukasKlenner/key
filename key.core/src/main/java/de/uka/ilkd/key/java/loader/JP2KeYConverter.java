@@ -40,6 +40,7 @@ import de.uka.ilkd.key.nparser.KeyAst;
 import de.uka.ilkd.key.parser.ParserException;
 import de.uka.ilkd.key.rule.metaconstruct.*;
 import de.uka.ilkd.key.rule.retracing.metaconstruct.EvaluateArrayDimensions;
+import de.uka.ilkd.key.rule.retracing.metaconstruct.EvaluateSwitchArg;
 import de.uka.ilkd.key.rule.retracing.metaconstruct.TracedInitArrayCreation;
 import de.uka.ilkd.key.rule.retracing.metaconstruct.TracedMethodCall;
 import de.uka.ilkd.key.rule.retracing.metaconstruct.TracedSwitchStatement;
@@ -2049,6 +2050,7 @@ class JP2KeYVisitor extends GenericVisitorAdapter<Object, Void> {
                 }
                 yield new TracedMethodCall(execSV, returnSV, accept(n.getChild()));
             }
+            case "#evaluate-switch-arg" -> new EvaluateSwitchArg(accept(n.getChild()));
             case "#traced-switch-statement" -> new TracedSwitchStatement(accept(n.getChild()));
             case "#traced-throw" -> {
                 if (labels.size() == 1) {

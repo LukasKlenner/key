@@ -279,6 +279,10 @@ public abstract class ProgramSVSort extends SortImpl {
 
     public static final ProgramSVSort SWITCH = new SwitchSVSort();
 
+    public static final ProgramSVSort SIMPLESWITCH = new SimpleSwitchSVSort();
+
+    public static final ProgramSVSort NONSIMPLESWITCH = new NonSimpleSwitchSVSort();
+
     public static final ProgramSVSort CONSTANT_PRIMITIVE_TYPE_VARIABLE =
             new ConstantProgramVariableSort(new Name("ConstantPrimitiveTypeVariable"), false);
 
@@ -1291,6 +1295,31 @@ public abstract class ProgramSVSort extends SortImpl {
             return (pe instanceof Switch);
         }
     }
+
+    private static final class SimpleSwitchSVSort extends ProgramSVSort {
+
+        public SimpleSwitchSVSort() {
+            super(new Name("SimpleSwitch"));
+        }
+
+        @Override
+        protected boolean canStandFor(ProgramElement pe, Services services) {
+            return pe instanceof Switch sw && SIMPLEEXPRESSION.canStandFor(sw.getExpression(), services);
+        }
+    }
+
+    private static final class NonSimpleSwitchSVSort extends ProgramSVSort {
+
+        public NonSimpleSwitchSVSort() {
+            super(new Name("NonSimpleSwitch"));
+        }
+
+        @Override
+        protected boolean canStandFor(ProgramElement pe, Services services) {
+            return pe instanceof Switch sw && NONSIMPLEEXPRESSION.canStandFor(sw.getExpression(), services);
+        }
+    }
+
 
     private static final class MultipleVariableDeclarationSort extends ProgramSVSort {
 
