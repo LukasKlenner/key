@@ -86,9 +86,8 @@ public class TracedInitArrayCreation extends InitArrayCreation {
                                 baseType
                         );
                 CopyAssignment arrayAssign = KeYJavaASTFactory.assign(
-                        KeYJavaASTFactory.arrayFieldAccess((ReferencePrefix) resultVar, KeYJavaASTFactory.intLiteral(i)),
-
-                        KeYJavaASTFactory.passiveExpression((ProgramVariable) arrayDecl.getVariables().get(0).getProgramVariable())
+                        KeYJavaASTFactory.passiveExpression(KeYJavaASTFactory.arrayFieldAccess((ReferencePrefix) resultVar, KeYJavaASTFactory.intLiteral(i))),
+                        (ProgramVariable) arrayDecl.getVariables().get(0).getProgramVariable()
                 );
                 bodyStmnts.add(arrayDecl);
                 bodyStmnts.add(arrayAssign);
