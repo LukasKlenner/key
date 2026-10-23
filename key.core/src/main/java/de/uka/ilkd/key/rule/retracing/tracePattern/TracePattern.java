@@ -10,15 +10,4 @@ public interface TracePattern {
     boolean matches(ImmutableList<TraceElement> elements);
 
     int getMatchedLength() throws UnsupportedOperationException;
-
-    static TracePattern of(String pattern) {
-        if (pattern.equals("*")) {
-            return new AnyTracePattern();
-        }
-        if (pattern.startsWith("!")) {
-            return new NegatedTracePattern(pattern.substring(1));
-        }
-
-        return new BasicTracePattern(pattern);
-    }
 }

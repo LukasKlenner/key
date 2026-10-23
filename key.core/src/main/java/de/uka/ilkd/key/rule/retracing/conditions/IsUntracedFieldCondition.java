@@ -36,11 +36,16 @@ public final class IsUntracedFieldCondition extends VariableConditionAdapter {
         }
 
         ProgramElementName name = (ProgramElementName) attribute.name();
-        return negation ^ name.getProgramName().startsWith("$");
+        return negation ^ isUntracedField(attribute);
     }
 
     @Override
     public String toString() {
         return (negation ? "\\not " : "") + "\\isUntracedField(" + fieldVar + ")";
+    }
+
+    private static boolean isUntracedField(ProgramVariable attribute) {
+        ProgramElementName name = (ProgramElementName) attribute.name();
+        return name.getProgramName().startsWith("$") || attribute.isStatic();
     }
 }
