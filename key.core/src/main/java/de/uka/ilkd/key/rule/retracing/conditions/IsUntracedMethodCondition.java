@@ -20,20 +20,31 @@ public final class IsUntracedMethodCondition extends VariableConditionAdapter {
 
     private final boolean negation;
     private final SchemaVariable receiver;
-    private final SchemaVariable methname;
+    private final SchemaVariable methodBody;
     private final SchemaVariable args;
+    private final SchemaVariable executionContext;
 
-    public IsUntracedMethodCondition(SchemaVariable receiver, SchemaVariable methname,
-            SchemaVariable args, boolean negation) {
+    public IsUntracedMethodCondition(SchemaVariable receiver, SchemaVariable methodBody,
+                                     SchemaVariable args, SchemaVariable executionContext, boolean negation) {
         this.negation = negation;
         this.receiver = receiver;
-        this.methname = methname;
+        this.methodBody = methodBody;
         this.args = args;
+        this.executionContext = executionContext;
     }
 
-    public IsUntracedMethodCondition(SchemaVariable methname, SchemaVariable args,
-            boolean negation) {
-        this(null, methname, args, negation);
+    public IsUntracedMethodCondition(SchemaVariable receiver, SchemaVariable methodBody,
+                                     SchemaVariable args, boolean negation) {
+        this(receiver, methodBody, args, null, negation);
+    }
+
+    public IsUntracedMethodCondition(SchemaVariable methodBody, SchemaVariable args,
+                                     boolean negation) {
+        this(null, methodBody, args, null, negation);
+    }
+
+    public IsUntracedMethodCondition(SchemaVariable executionContext, boolean negation) {
+        this(null, null, null, executionContext, negation);
     }
 
     private static ImmutableArray<Expression> toExpArray(
@@ -48,17 +59,25 @@ public final class IsUntracedMethodCondition extends VariableConditionAdapter {
     @SuppressWarnings("unchecked")
     @Override
     public boolean check(SchemaVariable var, SyntaxElement subst, SVInstantiations svInst,
-            Services services) {
+                         Services services) {
+
+        if (executionContext != null) {
+            // if an explicit execution context is given, check if its method context is an internal method
+            // This is used for return statements, that are also traced in static and private methods
+            ExecutionContext ec = svInst.getInstantiation(executionContext);
+            return negation ^ isInternalMethod(ec.getMethodContext());
+        }
+
         ExecutionContext ec = svInst.getContextInstantiation().activeStatementContext();
         ReferencePrefix rp = null;
         if (receiver != null) {
-            rp = (ReferencePrefix) svInst.getInstantiation(receiver);
+            rp = svInst.getInstantiation(receiver);
         }
 
-        MethodName mn = (MethodName) svInst.getInstantiation(methname);
+        MethodName mn = svInst.getInstantiation(methodBody);
 
         ImmutableArray<Expression> ar =
-            toExpArray((ImmutableArray<ProgramElement>) svInst.getInstantiation(args));
+                toExpArray(svInst.getInstantiation(args));
         if (var == args) {
             ar = toExpArray((ImmutableArray<? extends ProgramElement>) subst);
         }
@@ -80,7 +99,7 @@ public final class IsUntracedMethodCondition extends VariableConditionAdapter {
             method = mr.method(services, prefixType, ec);
         } else {
             method = mr.method(services, prefixType, mr.getMethodSignature(services, ec),
-                prefixType);
+                    prefixType);
         }
 
         if (method == null) {
@@ -92,10 +111,14 @@ public final class IsUntracedMethodCondition extends VariableConditionAdapter {
     @Override
     public String toString() {
         return (negation ? "\\not " : "") + "\\isUntracedMethod(" +
-            (receiver != null ? receiver + ", " : "") + methname + ", " + args + ")";
+                (receiver != null ? receiver + ", " : "") + methodBody + ", " + args + ")";
     }
 
     private static boolean isUntracedMethod(IProgramMethod method) {
-        return method.getName().startsWith("$") || method.isStatic() || method.isPrivate();
+        return isInternalMethod(method) || method.isStatic() || method.isPrivate();
+    }
+
+    private static boolean isInternalMethod(IProgramMethod method) {
+        return method.getName().startsWith("$");
     }
 }

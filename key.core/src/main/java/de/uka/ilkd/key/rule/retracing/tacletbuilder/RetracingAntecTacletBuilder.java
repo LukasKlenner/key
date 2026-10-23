@@ -2,11 +2,13 @@ package de.uka.ilkd.key.rule.retracing.tacletbuilder;
 
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.rule.AntecTaclet;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.RetracingAntecTaclet;
 import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import de.uka.ilkd.key.rule.tacletbuilder.AntecTacletBuilder;
 import de.uka.ilkd.key.rule.tacletbuilder.TacletPrefixBuilder;
+import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.prover.rules.ApplicationRestriction;
 import org.key_project.prover.rules.TacletApplPart;
 import org.key_project.prover.sequent.Sequent;
@@ -15,7 +17,7 @@ public class RetracingAntecTacletBuilder extends AntecTacletBuilder implements R
 
     private TracePattern tracePattern;
 
-    private AdvanceTraceInformation advanceTraceInformation;
+    private SchemaVariable catchCountVar;
 
     @Override
     public AntecTaclet getAntecTaclet() {
@@ -26,6 +28,11 @@ public class RetracingAntecTacletBuilder extends AntecTacletBuilder implements R
             throw new TacletBuilderException(this, "No trace pattern specified");
         }
         checkBoundInIfAndFind();
+
+        AdvanceTraceInformation defaultAdvanceTraceInformation = tracePattern.getDefaultAdvanceTraceInformation();
+        AdvanceTraceInformation advanceTraceInformation = catchCountVar != null ?
+                new AdvanceCatchTraceInformation(catchCountVar, defaultAdvanceTraceInformation) :
+                defaultAdvanceTraceInformation;
 
         TacletPrefixBuilder prefixBuilder = new TacletPrefixBuilder(this);
 
@@ -60,8 +67,8 @@ public class RetracingAntecTacletBuilder extends AntecTacletBuilder implements R
     }
 
     @Override
-    public RetracingAntecTacletBuilder setAdvanceTrace(AdvanceTraceInformation advanceTraceInformation) {
-        this.advanceTraceInformation = advanceTraceInformation;
+    public RetracingAntecTacletBuilder setCatchCountVar(SchemaVariable catchCountVar) {
+        this.catchCountVar = catchCountVar;
         return this;
     }
 

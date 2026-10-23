@@ -31,7 +31,6 @@ import de.uka.ilkd.key.rule.RewriteTaclet;
 import de.uka.ilkd.key.rule.Taclet;
 import de.uka.ilkd.key.rule.conditions.TypeResolver;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
-import de.uka.ilkd.key.rule.retracing.advanceTrace.BasicAdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingAntecTacletBuilder;
 import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingSuccTacletBuilder;
 import de.uka.ilkd.key.rule.retracing.tacletbuilder.RetracingTacletBuilder;
@@ -668,13 +667,7 @@ public class TacletPBuilder extends ExpressionBuilder {
             var advanceTraceCtx = ctx.advanceTrace(0);
 
             if (advanceTraceCtx.ADVANCE_CATCH_TRACE() != null) {
-                retracingTacletBuilder.setAdvanceTrace(new AdvanceCatchTraceInformation(
-                        accept(advanceTraceCtx.catchClausesCount)
-                ));
-            } else if (advanceTraceCtx.ADVANCE_TRACE() != null) {
-                retracingTacletBuilder.setAdvanceTrace(new BasicAdvanceTraceInformation(
-                        Integer.parseInt(advanceTraceCtx.traceElementsCount.getText())
-                ));
+                retracingTacletBuilder.setCatchCountVar(accept(advanceTraceCtx.catchClausesCount));
             } else {
                 throw newSemanticError(ctx, "Unknown advance trace type.");
             }

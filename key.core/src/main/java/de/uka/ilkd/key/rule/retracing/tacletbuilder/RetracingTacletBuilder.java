@@ -1,14 +1,11 @@
 package de.uka.ilkd.key.rule.retracing.tacletbuilder;
 
-import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
+import org.key_project.logic.op.sv.SchemaVariable;
 
 public interface RetracingTacletBuilder<T extends RetracingTacletBuilder<T>> {
 
-    /**
-     * sets the advance trace count
-     */
-    T setAdvanceTrace(AdvanceTraceInformation advanceTraceInformation);
+    T setCatchCountVar(SchemaVariable catchCountVar);
 
     T setTracePattern(TracePattern tracePattern);
 

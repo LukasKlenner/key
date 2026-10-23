@@ -121,8 +121,7 @@ modifiers
    //TODO Split
 
 advanceTrace
-   : ADVANCE_TRACE LPAREN traceElementsCount = INT_LITERAL RPAREN
-   | ADVANCE_CATCH_TRACE LPAREN catchClausesCount = varId RPAREN
+   : ADVANCE_CATCH_TRACE LPAREN catchClausesCount = varId RPAREN
    ;
    
 one_schema_var_decl

@@ -1,8 +1,12 @@
 package de.uka.ilkd.key.rule.retracing.tracePattern;
 
 import de.uka.ilkd.key.proof.retracing.TraceElement;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.NoAdvanceTraceInformation;
+import org.jspecify.annotations.NullMarked;
 import org.key_project.util.collection.ImmutableList;
 
+@NullMarked
 class AnyTracePattern implements TracePattern {
 
     @Override
@@ -11,8 +15,7 @@ class AnyTracePattern implements TracePattern {
     }
 
     @Override
-    public int getMatchedLength() throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("AnyTracePattern does not support getMatchedLength.");
+    public AdvanceTraceInformation getDefaultAdvanceTraceInformation() {
+        return new NoAdvanceTraceInformation();
     }
-
 }

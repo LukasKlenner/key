@@ -10,4 +10,8 @@ public record BasicAdvanceTraceInformation(
         }
     }
 
+    @Override
+    public int getTraceElementsConsumed() {
+        return traceElementsCount;
+    }
 }

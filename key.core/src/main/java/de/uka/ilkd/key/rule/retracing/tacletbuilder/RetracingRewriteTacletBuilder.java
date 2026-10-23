@@ -1,18 +1,20 @@
 package de.uka.ilkd.key.rule.retracing.tacletbuilder;
 
 import de.uka.ilkd.key.logic.JTerm;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.RetracingRewriteTaclet;
 import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import de.uka.ilkd.key.rule.tacletbuilder.RewriteTacletBuilder;
 import de.uka.ilkd.key.rule.tacletbuilder.TacletPrefixBuilder;
+import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.prover.rules.TacletApplPart;
 
 public class RetracingRewriteTacletBuilder extends RewriteTacletBuilder<RetracingRewriteTaclet> implements RetracingTacletBuilder<RetracingRewriteTacletBuilder> {
 
     private TracePattern tracePattern;
 
-    private AdvanceTraceInformation advanceTraceInformation;
+    private SchemaVariable catchCountVar;
 
     @Override
     public RetracingRewriteTaclet getRewriteTaclet() {
@@ -23,6 +25,12 @@ public class RetracingRewriteTacletBuilder extends RewriteTacletBuilder<Retracin
             throw new TacletBuilderException(this, "No trace pattern specified");
         }
         checkBoundInIfAndFind();
+
+        AdvanceTraceInformation defaultAdvanceTraceInformation = tracePattern.getDefaultAdvanceTraceInformation();
+        AdvanceTraceInformation advanceTraceInformation = catchCountVar != null ?
+                new AdvanceCatchTraceInformation(catchCountVar, defaultAdvanceTraceInformation) :
+                defaultAdvanceTraceInformation;
+
         TacletPrefixBuilder prefixBuilder = new TacletPrefixBuilder(this);
         prefixBuilder.build();
         return new RetracingRewriteTaclet(name,
@@ -46,8 +54,8 @@ public class RetracingRewriteTacletBuilder extends RewriteTacletBuilder<Retracin
     }
 
     @Override
-    public RetracingRewriteTacletBuilder setAdvanceTrace(AdvanceTraceInformation advanceTraceInformation) {
-        this.advanceTraceInformation = advanceTraceInformation;
+    public RetracingRewriteTacletBuilder setCatchCountVar(SchemaVariable catchCountVar) {
+        this.catchCountVar = catchCountVar;
         return this;
     }
 }

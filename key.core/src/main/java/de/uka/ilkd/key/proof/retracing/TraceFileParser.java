@@ -39,7 +39,7 @@ public class TraceFileParser {
                     elements.add(new TraceElement.Else());
                     i++;
                 }
-                case 'R', 'T', 'U' -> {
+                case 'T' -> {
                     // ignored by key
                     i++;
                 }
@@ -51,6 +51,14 @@ public class TraceFileParser {
                     }
                     long catchIndex = Long.parseLong(traceString.substring(start, i), 16);
                     elements.add(new TraceElement.Catch(catchIndex));
+                }
+                case 'U' -> {
+                    elements.add(new TraceElement.TryEnd());
+                    i++;
+                }
+                case 'R' -> {
+                    elements.add(new TraceElement.Return());
+                    i++;
                 }
                 case 'D' -> {
                     i++;

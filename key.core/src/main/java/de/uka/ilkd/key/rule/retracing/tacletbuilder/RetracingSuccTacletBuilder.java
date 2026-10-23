@@ -2,11 +2,13 @@ package de.uka.ilkd.key.rule.retracing.tacletbuilder;
 
 import de.uka.ilkd.key.logic.JTerm;
 import de.uka.ilkd.key.rule.SuccTaclet;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
 import de.uka.ilkd.key.rule.retracing.RetracingSuccTaclet;
 import de.uka.ilkd.key.rule.retracing.tracePattern.TracePattern;
 import de.uka.ilkd.key.rule.tacletbuilder.SuccTacletBuilder;
 import de.uka.ilkd.key.rule.tacletbuilder.TacletPrefixBuilder;
+import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.prover.rules.ApplicationRestriction;
 import org.key_project.prover.rules.TacletApplPart;
 import org.key_project.prover.sequent.Sequent;
@@ -15,7 +17,7 @@ public class RetracingSuccTacletBuilder extends SuccTacletBuilder implements Ret
 
     private TracePattern tracePattern;
 
-    private AdvanceTraceInformation advanceTraceInformation;
+    private SchemaVariable catchCountVar;
 
     @Override
     public SuccTaclet getSuccTaclet() {
@@ -26,6 +28,12 @@ public class RetracingSuccTacletBuilder extends SuccTacletBuilder implements Ret
             throw new TacletBuilderException(this, "No trace pattern specified");
         }
         checkBoundInIfAndFind();
+
+        AdvanceTraceInformation defaultAdvanceTraceInformation = tracePattern.getDefaultAdvanceTraceInformation();
+        AdvanceTraceInformation advanceTraceInformation = catchCountVar != null ?
+                new AdvanceCatchTraceInformation(catchCountVar, defaultAdvanceTraceInformation) :
+                defaultAdvanceTraceInformation;
+
         final TacletPrefixBuilder prefixBuilder = new TacletPrefixBuilder(this);
         prefixBuilder.build();
         return new RetracingSuccTaclet(name,
@@ -57,8 +65,8 @@ public class RetracingSuccTacletBuilder extends SuccTacletBuilder implements Ret
     }
 
     @Override
-    public RetracingSuccTacletBuilder setAdvanceTrace(AdvanceTraceInformation advanceTraceInformation) {
-        this.advanceTraceInformation = advanceTraceInformation;
+    public RetracingSuccTacletBuilder setCatchCountVar(SchemaVariable catchCountVar) {
+        this.catchCountVar = catchCountVar;
         return this;
     }
 

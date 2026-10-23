@@ -170,10 +170,6 @@ NEGATED_TRACE_PATTERN
    : '\\negatedTracePattern'
    ;
 
-ADVANCE_TRACE
-   : '\\advanceTrace'
-   ;
-
 ADVANCE_CATCH_TRACE
    : '\\advanceCatchTrace'
    ;

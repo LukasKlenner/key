@@ -5,7 +5,6 @@ import de.uka.ilkd.key.rule.TacletApp;
 import de.uka.ilkd.key.rule.retracing.RetracingTaclet;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
-import de.uka.ilkd.key.rule.retracing.advanceTrace.BasicAdvanceTraceInformation;
 import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.prover.rules.RuleApp;
 import org.key_project.util.collection.ImmutableList;
@@ -38,6 +37,7 @@ public class TracingState {
         this.lastConsumedCatchIndex = other.lastConsumedCatchIndex;
         this.currentDimensions = other.currentDimensions;
         this.traceElementsForCurrentRuleApp = other.traceElementsForCurrentRuleApp;
+        this.checkingArrayDimensions = other.checkingArrayDimensions;
     }
 
     /**
@@ -85,16 +85,12 @@ public class TracingState {
             currentDimensions = ImmutableList.of();
         }
 
-        int traceElementsCount = switch (advanceTraceInformation) {
-            case BasicAdvanceTraceInformation(int count) -> count;
-            case null -> retracingTaclet.getTracePattern().getMatchedLength();
-            default -> 0;
-        };
+        int traceElementsCount = advanceTraceInformation.getTraceElementsConsumed();
 
         traceElementsForCurrentRuleApp = traceElements.take(traceElementsCount);
         traceElements = traceElements.skip(traceElementsCount);
 
-        if (advanceTraceInformation instanceof AdvanceCatchTraceInformation(SchemaVariable catchCountVar)) {
+        if (advanceTraceInformation instanceof AdvanceCatchTraceInformation(SchemaVariable catchCountVar, AdvanceTraceInformation additionalAdvanceTraceInformation)) {
             IntLiteral catchCount = tacletApp.matchConditions().getInstantiations().getInstantiation(catchCountVar);
             currentCatchCount += catchCount.getValue();
         }

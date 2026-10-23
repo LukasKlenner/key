@@ -1,13 +1,17 @@
 package de.uka.ilkd.key.rule.retracing.tracePattern;
 
 import de.uka.ilkd.key.proof.retracing.TraceElement;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
+import de.uka.ilkd.key.rule.retracing.advanceTrace.BasicAdvanceTraceInformation;
+import org.jspecify.annotations.NullMarked;
 import org.key_project.util.collection.ImmutableList;
 
 import java.util.List;
 
+@NullMarked
 public class BasicTracePattern implements TracePattern {
 
-    private static final List<Character> VALID_PATTERN_CHARS = List.of('I', 'O', 'C', 'T', 'J', 'D', 'E', 'S');
+    private static final List<Character> VALID_PATTERN_CHARS = List.of('I', 'O', 'C', 'T', 'J', 'U', 'R', 'D', 'E', 'S');
 
     private final String pattern;
     private final int length;
@@ -50,13 +54,33 @@ public class BasicTracePattern implements TracePattern {
 
             TraceElement elem = elements.head();
             switch (c) {
-                case 'I' -> { if (!(elem instanceof TraceElement.If)) return false; }
-                case 'O' -> { if (!(elem instanceof TraceElement.Else)) return false; }
-                case 'C' -> { if (!(elem instanceof TraceElement.Call)) return false; }
-                case 'T' -> { if (!(elem instanceof TraceElement.Try)) return false; }
-                case 'J' -> { if (!(elem instanceof TraceElement.Catch)) return false; }
-                case 'D' -> { if (!(elem instanceof TraceElement.Dim)) return false; }
-                case 'E' -> { if (!(elem instanceof TraceElement.End)) return false; }
+                case 'I' -> {
+                    if (!(elem instanceof TraceElement.If)) return false;
+                }
+                case 'O' -> {
+                    if (!(elem instanceof TraceElement.Else)) return false;
+                }
+                case 'C' -> {
+                    if (!(elem instanceof TraceElement.Call)) return false;
+                }
+                case 'T' -> {
+                    if (!(elem instanceof TraceElement.Try)) return false;
+                }
+                case 'J' -> {
+                    if (!(elem instanceof TraceElement.Catch)) return false;
+                }
+                case 'U' -> {
+                    if (!(elem instanceof TraceElement.TryEnd)) return false;
+                }
+                case 'R' -> {
+                    if (!(elem instanceof TraceElement.Return)) return false;
+                }
+                case 'D' -> {
+                    if (!(elem instanceof TraceElement.Dim)) return false;
+                }
+                case 'E' -> {
+                    if (!(elem instanceof TraceElement.End)) return false;
+                }
                 default -> throw new IllegalStateException(
                         "Invalid trace pattern character: " + c + " in pattern " + pattern);
             }
@@ -67,7 +91,7 @@ public class BasicTracePattern implements TracePattern {
     }
 
     @Override
-    public int getMatchedLength() throws UnsupportedOperationException {
-        return length;
+    public AdvanceTraceInformation getDefaultAdvanceTraceInformation() {
+        return new BasicAdvanceTraceInformation(length);
     }
 }
