@@ -68,7 +68,9 @@ public class EvaluateArrayDimensions extends ProgramTransformer {
             final Expression negCheck =
                     KeYJavaASTFactory.lessThanZeroOperator(dimVar);
             final Statement throwNas = KeYJavaASTFactory.throwClause(
-                    KeYJavaASTFactory.newOperator(nasType));
+                    KeYJavaASTFactory.passiveExpression(
+                            KeYJavaASTFactory.newOperator(nasType)
+                    ));
             stmts.add(KeYJavaASTFactory.ifThen(negCheck, throwNas));
         }
 
