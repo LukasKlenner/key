@@ -1,70 +1,21 @@
 /* This file is part of KeY - https://key-project.org
- * KeY is licensed under the GNU General Public License Version 2
- * SPDX-License-Identifier: GPL-2.0-only */
+ * KeY is licensed under the GNU General Public License Version 2,
+ * or (at your option) any later version.
+ * SPDX-License-Identifier: GPL-2.0-or-later */
 package de.uka.ilkd.key.logic.sort;
 
 import de.uka.ilkd.key.java.Services;
-import de.uka.ilkd.key.java.ast.Label;
-import de.uka.ilkd.key.java.ast.NamedProgramElement;
-import de.uka.ilkd.key.java.ast.NonTerminalProgramElement;
-import de.uka.ilkd.key.java.ast.ProgramElement;
-import de.uka.ilkd.key.java.ast.Statement;
-import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
-import de.uka.ilkd.key.java.ast.abstraction.PrimitiveType;
-import de.uka.ilkd.key.java.ast.abstraction.Type;
-import de.uka.ilkd.key.java.ast.declaration.ConstructorDeclaration;
-import de.uka.ilkd.key.java.ast.declaration.MethodDeclaration;
-import de.uka.ilkd.key.java.ast.declaration.VariableDeclaration;
-import de.uka.ilkd.key.java.ast.declaration.VariableSpecification;
-import de.uka.ilkd.key.java.ast.expression.ArrayInitializer;
-import de.uka.ilkd.key.java.ast.expression.Expression;
-import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
-import de.uka.ilkd.key.java.ast.expression.literal.Literal;
-import de.uka.ilkd.key.java.ast.expression.literal.StringLiteral;
-import de.uka.ilkd.key.java.ast.expression.operator.DLEmbeddedExpression;
-import de.uka.ilkd.key.java.ast.expression.operator.Instanceof;
-import de.uka.ilkd.key.java.ast.expression.operator.Intersect;
-import de.uka.ilkd.key.java.ast.expression.operator.Negative;
-import de.uka.ilkd.key.java.ast.expression.operator.New;
-import de.uka.ilkd.key.java.ast.expression.operator.NewArray;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.AllFields;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.AllObjects;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqConcat;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqGet;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqIndexOf;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqLength;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqPut;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqReverse;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqSingleton;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SeqSub;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SetMinus;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.SetUnion;
-import de.uka.ilkd.key.java.ast.expression.operator.adt.Singleton;
-import de.uka.ilkd.key.java.ast.reference.ConstructorReference;
-import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
-import de.uka.ilkd.key.java.ast.reference.FieldReference;
-import de.uka.ilkd.key.java.ast.reference.MetaClassReference;
-import de.uka.ilkd.key.java.ast.reference.MethodName;
-import de.uka.ilkd.key.java.ast.reference.MethodReference;
-import de.uka.ilkd.key.java.ast.reference.ReferencePrefix;
-import de.uka.ilkd.key.java.ast.reference.SpecialConstructorReference;
-import de.uka.ilkd.key.java.ast.reference.SuperReference;
-import de.uka.ilkd.key.java.ast.reference.ThisReference;
-import de.uka.ilkd.key.java.ast.reference.TypeReference;
-import de.uka.ilkd.key.java.ast.statement.Catch;
-import de.uka.ilkd.key.java.ast.statement.Ccatch;
-import de.uka.ilkd.key.java.ast.statement.For;
-import de.uka.ilkd.key.java.ast.statement.ForUpdates;
-import de.uka.ilkd.key.java.ast.statement.Guard;
-import de.uka.ilkd.key.java.ast.statement.LoopInit;
-import de.uka.ilkd.key.java.ast.statement.MethodBodyStatement;
-import de.uka.ilkd.key.java.ast.statement.Switch;
-import de.uka.ilkd.key.logic.JTerm;
-import de.uka.ilkd.key.logic.ProgramElementName;
-import de.uka.ilkd.key.logic.op.IProgramMethod;
-import de.uka.ilkd.key.logic.op.ProgramConstant;
-import de.uka.ilkd.key.logic.op.ProgramSV;
-import de.uka.ilkd.key.logic.op.ProgramVariable;
+import de.uka.ilkd.key.java.ast.*;
+import de.uka.ilkd.key.java.ast.abstraction.*;
+import de.uka.ilkd.key.java.ast.declaration.*;
+import de.uka.ilkd.key.java.ast.expression.*;
+import de.uka.ilkd.key.java.ast.expression.literal.*;
+import de.uka.ilkd.key.java.ast.expression.operator.*;
+import de.uka.ilkd.key.java.ast.reference.*;
+import de.uka.ilkd.key.java.ast.statement.*;
+import de.uka.ilkd.key.logic.*;
+import de.uka.ilkd.key.logic.op.*;
+
 import org.key_project.logic.Name;
 import org.key_project.logic.Named;
 import org.key_project.logic.Namespace;
@@ -74,6 +25,8 @@ import org.key_project.util.ExtList;
 import org.key_project.util.collection.DefaultImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static de.uka.ilkd.key.java.ast.expression.operator.UnaryOperatorKind.NEGATIVE;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -492,8 +445,8 @@ public abstract class ProgramSVSort extends SortImpl {
 
         @Override
         protected boolean canStandFor(ProgramElement pe, Services services) {
-            if (pe instanceof Negative) {
-                return ((Negative) pe).getChildAt(0) instanceof Literal;
+            if (pe instanceof UnaryOperator uo && uo.getKind() == NEGATIVE) {
+                return uo.getChildAt(0) instanceof Literal;
             }
 
             if (pe instanceof StringLiteral) {
@@ -509,16 +462,10 @@ public abstract class ProgramSVSort extends SortImpl {
                 return VARIABLE.canStandFor(v, services);
             }
 
-            if (pe instanceof SetUnion || pe instanceof Singleton || pe instanceof Intersect
-                    || pe instanceof SetMinus || pe instanceof AllFields || pe instanceof AllObjects
-                    || pe instanceof SeqSingleton || pe instanceof SeqConcat
-                    || pe instanceof SeqLength || pe instanceof SeqGet || pe instanceof SeqIndexOf
-                    || pe instanceof SeqSub || pe instanceof SeqReverse || pe instanceof SeqPut) {
-                if (pe instanceof NonTerminalProgramElement npe) {
-                    for (int i = 0, childCount = npe.getChildCount(); i < childCount; i++) {
-                        if (!canStandFor(npe.getChildAt(i), services)) {
-                            return false;
-                        }
+            if (pe instanceof LogicFunctionalOperator npe) {
+                for (int i = 0, childCount = npe.getChildCount(); i < childCount; i++) {
+                    if (!canStandFor(npe.getChildAt(i), services)) {
+                        return false;
                     }
                 }
                 return true;

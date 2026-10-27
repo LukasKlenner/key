@@ -1,6 +1,7 @@
 /* This file is part of KeY - https://key-project.org
- * KeY is licensed under the GNU General Public License Version 2
- * SPDX-License-Identifier: GPL-2.0-only */
+ * KeY is licensed under the GNU General Public License Version 2, 
+ * or (at your option) any later version.
+ * SPDX-License-Identifier: GPL-2.0-or-later */
 package de.uka.ilkd.key.proof.init;
 
 import java.util.*;
@@ -14,8 +15,9 @@ import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
 import de.uka.ilkd.key.java.ast.declaration.Modifier;
 import de.uka.ilkd.key.java.ast.declaration.ParameterDeclaration;
 import de.uka.ilkd.key.java.ast.declaration.VariableSpecification;
+import de.uka.ilkd.key.java.ast.expression.Assignment;
+import de.uka.ilkd.key.java.ast.expression.BinaryAssignment;
 import de.uka.ilkd.key.java.ast.expression.literal.NullLiteral;
-import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
 import de.uka.ilkd.key.java.ast.reference.TypeReference;
 import de.uka.ilkd.key.java.ast.statement.*;
 import de.uka.ilkd.key.java.ast.statement.Try;
@@ -38,8 +40,10 @@ import org.key_project.logic.sort.Sort;
 import org.key_project.util.collection.ImmutableList;
 import org.key_project.util.collection.ImmutableSet;
 
-import com.github.javaparser.ast.key.KeyTransactionStatement;
+import com.github.javaparser.ast.key.KeyTransactionStmt;
 import org.jspecify.annotations.Nullable;
+
+import static de.uka.ilkd.key.java.ast.expression.BinaryAssignment.BinaryAssignmentKind.COPY;
 
 /**
  * <p>
@@ -905,11 +909,11 @@ public abstract class AbstractOperationPO extends AbstractPO {
             sb2 = tryBlock;
         } else {
             // create try statement
-            final CopyAssignment nullStat = new CopyAssignment(exceptionVar, NullLiteral.NULL);
+            final Assignment nullStat = new BinaryAssignment(COPY, exceptionVar, NullLiteral.NULL);
             final VariableSpecification eSpec = new VariableSpecification(eVar);
             final ParameterDeclaration excDecl =
                 new ParameterDeclaration(new Modifier[0], excTypeRef, eSpec, false);
-            final CopyAssignment assignStat = new CopyAssignment(exceptionVar, eVar);
+            final Assignment assignStat = new BinaryAssignment(COPY, exceptionVar, eVar);
             final Catch catchStat =
                 new Catch(excDecl, catchBlock == null ? new StatementBlock(assignStat)
                         : new StatementBlock(assignStat, catchBlock));
@@ -920,19 +924,19 @@ public abstract class AbstractOperationPO extends AbstractPO {
                 sb2 = new StatementBlock(transaction
                         ? new Statement[] {
                             new TransactionStatement(
-                                KeyTransactionStatement.TransactionType.BEGIN),
+                                KeyTransactionStmt.TransactionType.BEGIN),
                             nullStat, tryStat,
                             new TransactionStatement(
-                                KeyTransactionStatement.TransactionType.FINISH) }
+                                KeyTransactionStmt.TransactionType.FINISH) }
                         : new Statement[] { nullStat, tryStat });
             } else {
                 sb2 = new StatementBlock(transaction
                         ? new Statement[] {
                             new TransactionStatement(
-                                KeyTransactionStatement.TransactionType.BEGIN),
+                                KeyTransactionStmt.TransactionType.BEGIN),
                             nullStat, beforeTry, tryStat,
                             new TransactionStatement(
-                                KeyTransactionStatement.TransactionType.FINISH) }
+                                KeyTransactionStmt.TransactionType.FINISH) }
                         : new Statement[] { nullStat, beforeTry, tryStat });
             }
         }

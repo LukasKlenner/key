@@ -317,13 +317,12 @@ subprojects {
             afterEvaluate {
                 description = project.description
                 assert (project.description != null && project.description != "") : "Description of modules are required at maven-central"
-                print(project.description)
             }
             url = 'https://key-project.org/'
 
             licenses {
                 license {
-                    name = "GNU General Public License (GPL), Version 2"
+                    name = "GNU General Public License (GPL), Version 2, or later"
                     url = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
                 }
             }

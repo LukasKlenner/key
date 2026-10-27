@@ -1,6 +1,7 @@
 /* This file is part of KeY - https://key-project.org
- * KeY is licensed under the GNU General Public License Version 2
- * SPDX-License-Identifier: GPL-2.0-only */
+ * KeY is licensed under the GNU General Public License Version 2, 
+ * or (at your option) any later version.
+ * SPDX-License-Identifier: GPL-2.0-or-later */
 package de.uka.ilkd.key.pp;
 
 import java.math.BigInteger;
@@ -465,6 +466,16 @@ public abstract class Notation {
         }
     }
 
+    public static final class PairNotation extends Notation {
+        public PairNotation() {
+            super(130);
+        }
+
+        public void print(JTerm t, LogicPrinter sp) {
+            sp.printPair(t);
+        }
+    }
+
     /**
      * The standard concrete syntax for conditional terms <code>if (phi) (t1) (t2)</code>.
      */
@@ -620,7 +631,7 @@ public abstract class Notation {
      * The standard concrete syntax for the number literal indicator `Z'. This is only used in the
      * `Pretty&amp;Untrue' syntax.
      */
-    static final class NumLiteral extends Notation {
+    public static final class NumLiteral extends Notation {
         public NumLiteral() {
             super(120);
         }

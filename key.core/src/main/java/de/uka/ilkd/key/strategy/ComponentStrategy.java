@@ -1,6 +1,7 @@
 /* This file is part of KeY - https://key-project.org
- * KeY is licensed under the GNU General Public License Version 2
- * SPDX-License-Identifier: GPL-2.0-only */
+ * KeY is licensed under the GNU General Public License Version 2, 
+ * or (at your option) any later version.
+ * SPDX-License-Identifier: GPL-2.0-or-later */
 package de.uka.ilkd.key.strategy;
 
 import java.util.Set;
@@ -11,12 +12,15 @@ import de.uka.ilkd.key.strategy.feature.RuleSetDispatchFeature;
 
 import org.key_project.prover.rules.RuleSet;
 
+import org.jspecify.annotations.Nullable;
+
 public interface ComponentStrategy extends Strategy<Goal> {
     enum StrategyAspect {
         Cost, Instantiation, Approval;
     }
 
     /// The strategy's cost dispatcher.
+    @Nullable
     RuleSetDispatchFeature getDispatcher(StrategyAspect aspect);
 
     /// The rule sets this strategy is designed to handle.

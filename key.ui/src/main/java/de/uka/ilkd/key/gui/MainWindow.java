@@ -1,6 +1,7 @@
 /* This file is part of KeY - https://key-project.org
- * KeY is licensed under the GNU General Public License Version 2
- * SPDX-License-Identifier: GPL-2.0-only */
+ * KeY is licensed under the GNU General Public License Version 2, 
+ * or (at your option) any later version.
+ * SPDX-License-Identifier: GPL-2.0-or-later */
 package de.uka.ilkd.key.gui;
 
 import java.awt.*;
@@ -820,10 +821,10 @@ public final class MainWindow extends JFrame {
                 IconFactory.automationWithOverlay(TOOLBAR_ICON_SIZE, "S")),
             new MacroAutomationAction(this,
                 new de.uka.ilkd.key.macros.AutoPilotPrepareProofMacro(),
-                IconFactory.automationWithOverlay(TOOLBAR_ICON_SIZE, "P"))
-        // when it is finished ... new MacroAutomationAction(this ... ScriptMacro ... "J" (*J*ML
-        // scripts)
-        );
+                IconFactory.automationWithOverlay(TOOLBAR_ICON_SIZE, "P")),
+            new MacroAutomationAction(this,
+                new de.uka.ilkd.key.macros.ScriptAwareMacro(),
+                IconFactory.automationWithOverlay(TOOLBAR_ICON_SIZE, "J")));
     }
 
     /**
@@ -1118,6 +1119,7 @@ public final class MainWindow extends JFrame {
         if (selected == null) {
             proof.addSeparator();
             proof.add(new SearchInProofTreeAction(this));
+            proof.add(new GotoNodeAction(this));
             proof.add(new SearchInSequentAction(this, sequentViewSearchBar));
             proof.add(new SearchNextAction(this, sequentViewSearchBar));
             proof.add(new SearchPreviousAction(this, sequentViewSearchBar));
@@ -1339,6 +1341,9 @@ public final class MainWindow extends JFrame {
                     newSequentView.printSequent();
                 }
             }
+        }
+        if (newSequentView != currentGoalView) {
+            currentGoalView.resetPrinter();
         }
 
         Runnable sequentUpdater = () -> {
