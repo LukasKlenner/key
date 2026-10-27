@@ -26,7 +26,7 @@ public class RetracingFindTacletAppContainer extends FindTacletAppContainer {
 
     @Override
     protected boolean isStillApplicable(Goal p_goal) {
-        if (!tracePattern.matches(p_goal.proof().getServices().getTracingState().getTraceElements())) {
+        if (!tracePattern.matches(p_goal.getTracingState().getTraceElements())) {
             return false;
         }
 

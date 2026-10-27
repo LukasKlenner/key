@@ -145,7 +145,7 @@ public final class KeYUserProblemFile extends KeYFile implements ProofOblInput {
             var functionMap = FunctionDatabaseParser.parse(funcDBPath);
             var functionDatabase = new FunctionDatabase(functionMap);
             var tracingState = new TracingState(traceElements, functionDatabase);
-            initConfig.getServices().setTracingState(tracingState);
+            initConfig.setTracingState(tracingState);
         } catch (IOException e) {
             throw new ProofInputException("Failed to load trace files", e);
         }

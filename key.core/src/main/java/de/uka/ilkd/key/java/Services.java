@@ -117,9 +117,6 @@ public class Services implements TermServices, LogicServices, ProofServices {
     @Nullable
     private JavaService javaService;
 
-    @Nullable
-    private TracingState tracingState;
-
     /**
      * creates a new Services object with a new TypeConverter and a new JavaInfo object with no
      * information stored at none of these.
@@ -150,8 +147,6 @@ public class Services implements TermServices, LogicServices, ProofServices {
             this.javaService = javaService.copy(this);
             this.javaInfo = new JavaInfo(new KeYProgModelInfo(this.javaService), this);
         }
-
-        this.tracingState = null;
     }
 
     private Services(Services s) {
@@ -177,12 +172,6 @@ public class Services implements TermServices, LogicServices, ProofServices {
         this.termBuilder = new TermBuilder(new TermFactory(caches.getTermFactoryCache()), this);
         this.termBuilderWithoutCache = new TermBuilder(new TermFactory(), this);
         this.originFactory = s.originFactory;
-
-        if (s.tracingState != null) {
-            this.tracingState = new TracingState(s.tracingState);
-        } else {
-            this.tracingState = null;
-        }
     }
 
     public Services getOverlay(NamespaceSet namespaces) {
@@ -301,9 +290,6 @@ public class Services implements TermServices, LogicServices, ProofServices {
         nameRecorder.set(detached);
         s.setJavaModel(getJavaModel());
         s.originFactory = originFactory;
-        if (tracingState != null) {
-            s.tracingState = new TracingState(tracingState);
-        }
         return s;
     }
 
@@ -334,9 +320,6 @@ public class Services implements TermServices, LogicServices, ProofServices {
         s.nameRecorder.set(nameRecorder.get().copy());
         s.setJavaModel(getJavaModel());
         s.originFactory = originFactory;
-        if (tracingState != null) {
-            s.tracingState = new TracingState(tracingState);
-        }
         return s;
     }
 
@@ -529,12 +512,14 @@ public class Services implements TermServices, LogicServices, ProofServices {
         return originFactory;
     }
 
-    public @Nullable TracingState getTracingState() {
-        return tracingState;
-    }
-
-    public void setTracingState(@Nullable TracingState tracingState) {
-        this.tracingState = tracingState;
+    /**
+     * @return The tracing state of the root node of the proof tree.
+     */
+    @NonNull
+    public TracingState getTracingState() {
+        Proof proof = getProof();
+        assert proof.openGoals().size() == 1 : "Can only determine the tracing state for proofs with a single open goal.";
+        return proof.openGoals().get(0).getTracingState();
     }
 
     // =================================================================================================================

@@ -46,9 +46,18 @@ public class TracedThrowStatement extends ProgramTransformer {
 
         TracingState tracingState = services.getTracingState();
 
-        if (!tracingState.isLastConsumedCatchIndexSet()) {
-            // if the last consumed catch index is not set, it means that the throw statement is not caught by any
-            // catch block in the current catch list and an upcoming finally block will consume the next trace element(s)
+        // get the last consumed catch index from the tracing state
+        long catchIndex = tracingState.getLastConsumedCatchIndex();
+        long currentCatchCount = tracingState.getCurrentCatchCount();
+
+        ImmutableArray<ProgramElement> catchListInst = svInst.getInstantiation(catchListVar);
+        int localCatchCount = catchListInst.size();
+        int previousCatchCount = Math.toIntExact(currentCatchCount - localCatchCount);
+
+        if (catchIndex < previousCatchCount) {
+            // Either no catch trace element has been consumed yet, or the consumed belongs to a previously handled throw.
+            // I.e., the throw statement is not caught by any catch block in the current catch list and an upcoming
+            // finally block will consume the next trace element(s) first.
 
             // propagate the exception wrapped in a passiveExpression for the next catch list in the call stack
             ImmutableList<ProgramElement> replacement = ImmutableList.singleton(KeYJavaASTFactory.throwClause(KeYJavaASTFactory.passiveExpression(throwExpr)));
@@ -57,19 +66,12 @@ public class TracedThrowStatement extends ProgramTransformer {
             return replacement.prepend(getFinallyBlock(svInst)).toArray(ProgramElement.class);
         }
 
-        // get the last consumed catch index from the tracing state
-        long catchIndex = tracingState.getLastConsumedCatchIndex();
-
-        ImmutableArray<ProgramElement> catchListInst = svInst.getInstantiation(catchListVar);
-        int catchCount = catchListInst.size();
-
-        long totalCatchCount = tracingState.getCurrentCatchCount();
-        int localCatchIndex = Math.toIntExact(catchIndex - (totalCatchCount - catchCount));
+        int localCatchIndex = Math.toIntExact(catchIndex - previousCatchCount);
         if (localCatchIndex < 0) {
-            throw new IllegalStateException("Trace element catch index is out of bounds: " + localCatchIndex + " (total catch count: " + catchCount + ")");
+            throw new IllegalStateException("Trace element catch index is out of bounds: " + localCatchIndex + " (catch count: " + localCatchCount + ")");
         }
 
-        if (localCatchIndex >= catchCount) {
+        if (localCatchIndex >= localCatchCount) {
             // the throw statement is not caught by any of the catch blocks in the current catch list
 
             // store the catch index for the propagated exception to be used in the next catch list
@@ -85,8 +87,6 @@ public class TracedThrowStatement extends ProgramTransformer {
         }
 
         // the throw statement is caught by one of the catch blocks in the current catch list
-
-        tracingState.clearLastConsumedCatchIndex();
 
         Catch catchCase = (Catch) catchListInst.get(localCatchIndex);
         StatementBlock catchBody = catchCase.getBody();

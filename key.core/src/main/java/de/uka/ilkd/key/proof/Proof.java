@@ -246,7 +246,7 @@ public class Proof implements ProofObject<Goal>, Named {
             InitConfig initConfig) {
         this(new Name(name), initConfig);
 
-        final var rootNode = new Node(this, problem);
+        final var rootNode = new Node(this, problem, initConfig.getTracingState());
         final var firstGoal =
             new Goal(rootNode, rules, new BuiltInRuleAppIndex(builtInRules), getServices());
         openGoals = openGoals.prepend(firstGoal);

@@ -18,6 +18,7 @@ import de.uka.ilkd.key.logic.RenamingTable;
 import de.uka.ilkd.key.logic.op.IProgramVariable;
 import de.uka.ilkd.key.proof.calculus.JavaDLSequentKit;
 import de.uka.ilkd.key.proof.reference.ClosedBy;
+import de.uka.ilkd.key.proof.retracing.TracingState;
 import de.uka.ilkd.key.rule.NoPosTacletApp;
 import de.uka.ilkd.key.rule.merge.MergeRule;
 
@@ -123,6 +124,10 @@ public class Node implements Iterable<Node> {
      */
     private final List<StrategyInfoUndoMethod> undoInfoForStrategyInfo = new ArrayList<>();
 
+    /**
+     * Iff the retracing taclet option is enabled, this field holds the current tracing state of the node.
+     */
+    private @Nullable TracingState tracingState;
 
     /**
      * creates an empty node that is root and leaf.
@@ -142,6 +147,15 @@ public class Node implements Iterable<Node> {
     }
 
     /**
+     * creates a node with the given contents, associated proof and tracing state
+     */
+    public Node(Proof proof, Sequent seq, TracingState tracingState) {
+        this(proof);
+        this.seq = seq;
+        this.tracingState = tracingState;
+    }
+
+    /**
      * creates a node with the given contents, the given collection of children (all elements must
      * be of class Node) and the given parent node.
      */
@@ -150,6 +164,15 @@ public class Node implements Iterable<Node> {
         this.parent = parent;
         this.localFunctions = parent.localFunctions;
         this.localProgVars = parent.localProgVars;
+    }
+
+    /**
+     * creates a node with the given contents, the given collection of children (all elements must
+     * be of class Node), the given parent node, and the given tracing state.
+     */
+    public Node(Proof proof, Sequent seq, Node parent, @Nullable TracingState tracingState) {
+        this(proof, seq, parent);
+        this.tracingState = tracingState;
     }
 
     /**
@@ -839,5 +862,10 @@ public class Node implements Iterable<Node> {
 
     public Stream<Node> childrenStream() {
         return children.stream();
+    }
+
+    public TracingState getTracingState() {
+        assert tracingState != null : "Node must be attached to a retracing proof to get the tracing state.";
+        return tracingState;
     }
 }

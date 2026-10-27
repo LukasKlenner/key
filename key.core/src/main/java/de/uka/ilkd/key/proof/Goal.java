@@ -16,6 +16,7 @@ import de.uka.ilkd.key.pp.LogicPrinter;
 import de.uka.ilkd.key.pp.NotationInfo;
 import de.uka.ilkd.key.proof.proofevent.NodeChangeJournal;
 import de.uka.ilkd.key.proof.proofevent.RuleAppInfo;
+import de.uka.ilkd.key.proof.retracing.TracingState;
 import de.uka.ilkd.key.rule.AbstractExternalSolverRuleApp;
 import de.uka.ilkd.key.rule.IBuiltInRuleApp;
 import de.uka.ilkd.key.rule.NoPosTacletApp;
@@ -571,8 +572,13 @@ public final class Goal implements ProofGoal<Goal> {
         final Node parent = node; // has to be stored because the node
         // of this goal will be replaced
 
+        TracingState tracingState = parent.getTracingState();
+        if (tracingState != null) {
+            tracingState = tracingState.updateTraceForApplication(node.getAppliedRuleApp());
+        }
+
         if (n == 1) {
-            Node newNode = new Node(parent.proof(), parent.sequent(), parent);
+            Node newNode = new Node(parent.proof(), parent.sequent(), parent, tracingState);
 
             parent.add(newNode);
             this.setNode(newNode);
@@ -583,7 +589,7 @@ public final class Goal implements ProofGoal<Goal> {
 
             for (int i = 0; i < n; i++) {
                 // create new node and add to tree
-                newNode[i] = new Node(parent.proof(), parent.sequent(), parent);
+                newNode[i] = new Node(parent.proof(), parent.sequent(), parent, tracingState);
             }
 
             parent.addAll(newNode);
@@ -661,14 +667,6 @@ public final class Goal implements ProofGoal<Goal> {
      */
     @Override
     public ImmutableList<Goal> apply(final RuleApp ruleApp) {
-
-        // TODO find cleaner solution
-        // strategy.isApprovedApp is too earlier because of varCond check in tryToInstantiate if not complete
-        // RuleAppListener is too late because taclet conditions are directly checked when the sequent is changed
-        if (proof().getServices().getTracingState() != null) {
-            proof().getServices().getTracingState().updateTraceForApplication(ruleApp);
-        }
-
         final PendingRuleApp pending = computeRuleApp(ruleApp);
         if (pending == null) {
             return null;
@@ -881,6 +879,10 @@ public final class Goal implements ProofGoal<Goal> {
             tacletAppAtAndBelow.forEach(allApps::add);
         }
         return allApps;
+    }
+
+    public TracingState getTracingState() {
+        return node().getTracingState();
     }
 
 }

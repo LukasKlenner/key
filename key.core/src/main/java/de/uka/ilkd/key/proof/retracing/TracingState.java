@@ -5,39 +5,68 @@ import de.uka.ilkd.key.rule.TacletApp;
 import de.uka.ilkd.key.rule.retracing.RetracingTaclet;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceCatchTraceInformation;
 import de.uka.ilkd.key.rule.retracing.advanceTrace.AdvanceTraceInformation;
+import org.jspecify.annotations.NullMarked;
 import org.key_project.logic.op.sv.SchemaVariable;
 import org.key_project.prover.rules.RuleApp;
 import org.key_project.util.collection.ImmutableList;
 
+@NullMarked
 public class TracingState {
 
-    private ImmutableList<TraceElement> traceElements;
+    private final ImmutableList<TraceElement> traceElements;
 
     private final FunctionDatabase functionDatabase;
 
-    private long currentCatchCount = 0;
+    /**
+     * The number of catch blocks that have been encountered so far.
+     */
+    private final long currentCatchCount;
 
-    private Long lastConsumedCatchIndex = null;
+    /**
+     * The index the last catch trace element that was consumed during any rule application.
+     * Initially -1 to indicate that no catch trace element has been consumed yet.
+     */
+    private final long lastConsumedCatchIndex;
 
-    private ImmutableList<Integer> currentDimensions = ImmutableList.of();
+    /**
+     * Indicates whether the previous trace element were array dimension trace elements, which means that the current
+     * rule application is also checking array dimensions.
+     */
+    private final boolean checkingArrayDimensions;
 
-    private boolean checkingArrayDimensions = false;
+    /**
+     * A list of the previously encountered array dimensions.
+     */
+    private final ImmutableList<Integer> currentDimensions;
 
-    private ImmutableList<TraceElement> traceElementsForCurrentRuleApp = ImmutableList.of();
+    /**
+     * The trace element that have been consumed during the current rule application.
+     */
+    private final ImmutableList<TraceElement> traceElementsForCurrentRuleApp;
 
-    public TracingState(ImmutableList<TraceElement> traceElements, FunctionDatabase functionDatabase) {
+    public TracingState(
+            ImmutableList<TraceElement> traceElements,
+            FunctionDatabase functionDatabase,
+            long currentCatchCount,
+            long lastConsumedCatchIndex,
+            ImmutableList<Integer> currentDimensions,
+            boolean checkingArrayDimensions,
+            ImmutableList<TraceElement> traceElementsForCurrentRuleApp
+    ) {
         this.traceElements = traceElements;
         this.functionDatabase = functionDatabase;
+        this.currentCatchCount = currentCatchCount;
+        this.lastConsumedCatchIndex = lastConsumedCatchIndex;
+        this.currentDimensions = currentDimensions;
+        this.checkingArrayDimensions = checkingArrayDimensions;
+        this.traceElementsForCurrentRuleApp = traceElementsForCurrentRuleApp;
     }
 
-    public TracingState(TracingState other) {
-        this.traceElements = ImmutableList.fromList(other.traceElements);
-        this.functionDatabase = other.functionDatabase;
-        this.currentCatchCount = other.currentCatchCount;
-        this.lastConsumedCatchIndex = other.lastConsumedCatchIndex;
-        this.currentDimensions = other.currentDimensions;
-        this.traceElementsForCurrentRuleApp = other.traceElementsForCurrentRuleApp;
-        this.checkingArrayDimensions = other.checkingArrayDimensions;
+    /**
+     * Creates a new initial TracingState with the given trace elements and function database.
+     */
+    public TracingState(ImmutableList<TraceElement> traceElements, FunctionDatabase functionDatabase) {
+        this(traceElements, functionDatabase, 0, -1, ImmutableList.of(), false, ImmutableList.of());
     }
 
     /**
@@ -74,50 +103,65 @@ public class TracingState {
         return caseIndex;
     }
 
-    public void updateTraceForApplication(RuleApp ruleApp) {
+    /**
+     * Given the application of a rule, this method creates and returns a new TracingState, that reflects the updated
+     * state after the rule has been applied.
+     */
+    public TracingState updateTraceForApplication(RuleApp ruleApp) {
         if (!(ruleApp instanceof TacletApp tacletApp) || !(tacletApp.taclet() instanceof RetracingTaclet retracingTaclet)) {
-            return;
+            return this;
         }
         AdvanceTraceInformation advanceTraceInformation = retracingTaclet.getAdvanceTraceInformation();
 
-        // cleanup only at after the next rule application, because we still need the currentDimensions for the current array initialization
+        ImmutableList<Integer> newDimensions = currentDimensions;
+        // cleanup only after the next rule application, because we still need the currentDimensions for the current array initialization
         if (!checkingArrayDimensions) {
-            currentDimensions = ImmutableList.of();
+            newDimensions = ImmutableList.of();
         }
 
         int traceElementsCount = advanceTraceInformation.getTraceElementsConsumed();
 
-        traceElementsForCurrentRuleApp = traceElements.take(traceElementsCount);
-        traceElements = traceElements.skip(traceElementsCount);
+        ImmutableList<TraceElement> consumedTraceElements = traceElements.take(traceElementsCount);
+        ImmutableList<TraceElement> remainingTraceElements = traceElements.skip(traceElementsCount);
 
-        if (advanceTraceInformation instanceof AdvanceCatchTraceInformation(SchemaVariable catchCountVar, AdvanceTraceInformation additionalAdvanceTraceInformation)) {
+        long newCatchCount = currentCatchCount;
+        if (advanceTraceInformation instanceof AdvanceCatchTraceInformation(
+                SchemaVariable catchCountVar, AdvanceTraceInformation additionalAdvanceTraceInformation
+        )) {
             IntLiteral catchCount = tacletApp.matchConditions().getInstantiations().getInstantiation(catchCountVar);
-            currentCatchCount += catchCount.getValue();
+            newCatchCount += catchCount.getValue();
         }
 
-        for (TraceElement elem : traceElementsForCurrentRuleApp) {
+        long updatedLastConsumedCatchIndex = this.lastConsumedCatchIndex;
+        boolean updatedCheckingArrayDimensions = this.checkingArrayDimensions;
+        for (TraceElement elem : consumedTraceElements) {
             switch (elem) {
-                case TraceElement.Catch(long catchIndex) -> {
-                    if (isLastConsumedCatchIndexSet()) {
-                        throw new IllegalStateException("Last consumed catch index is already set to " + lastConsumedCatchIndex + ", but found another catch element with index " + catchIndex);
-                    }
-                    lastConsumedCatchIndex = catchIndex;
-                }
+                case TraceElement.Catch(long catchIndex) -> updatedLastConsumedCatchIndex = catchIndex;
 
                 // Reset the array dimension checking flag when encountering an if or else statement
                 // as they mark the check of the last dimension
                 // we do not yet clear the currentDimensions list, because we still need to access the dimensions for the current array initialization
-                case TraceElement.If() -> checkingArrayDimensions = false;
-                case TraceElement.Else() -> checkingArrayDimensions = false;
+                case TraceElement.If() -> updatedCheckingArrayDimensions = false;
+                case TraceElement.Else() -> updatedCheckingArrayDimensions = false;
 
                 case TraceElement.Dim(int dimensions) -> {
-                    checkingArrayDimensions = true;
-                    currentDimensions = currentDimensions.append(dimensions);
+                    updatedCheckingArrayDimensions = true;
+                    newDimensions = currentDimensions.append(dimensions);
                 }
                 default -> {
                 }
             }
         }
+
+        return new TracingState(
+                remainingTraceElements,
+                functionDatabase,
+                newCatchCount,
+                updatedLastConsumedCatchIndex,
+                newDimensions,
+                updatedCheckingArrayDimensions,
+                consumedTraceElements
+        );
     }
 
     public long getCurrentCatchCount() {
@@ -126,14 +170,6 @@ public class TracingState {
 
     public long getLastConsumedCatchIndex() {
         return lastConsumedCatchIndex;
-    }
-
-    public boolean isLastConsumedCatchIndexSet() {
-        return lastConsumedCatchIndex != null;
-    }
-
-    public void clearLastConsumedCatchIndex() {
-        lastConsumedCatchIndex = null;
     }
 
     public ImmutableList<TraceElement> getTraceElements() {

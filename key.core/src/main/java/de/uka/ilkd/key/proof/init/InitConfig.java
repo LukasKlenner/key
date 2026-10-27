@@ -18,6 +18,7 @@ import de.uka.ilkd.key.proof.io.consistency.FileRepo;
 import de.uka.ilkd.key.proof.mgt.RuleJustification;
 import de.uka.ilkd.key.proof.mgt.RuleJustificationByAddRules;
 import de.uka.ilkd.key.proof.mgt.RuleJustificationInfo;
+import de.uka.ilkd.key.proof.retracing.TracingState;
 import de.uka.ilkd.key.rule.*;
 import de.uka.ilkd.key.rule.tacletbuilder.TacletBuilder;
 import de.uka.ilkd.key.settings.Configuration;
@@ -91,6 +92,8 @@ public class InitConfig {
     private ProofSettings settings;
 
     private KeyAst.@Nullable Declarations header;
+
+    private TracingState tracingState;
 
 
     // -------------------------------------------------------------------------
@@ -463,6 +466,7 @@ public class InitConfig {
         ic.justifInfo = justifInfo.copy();
         ic.fileRepo = fileRepo; // TODO: copy instead? delete via dispose method?
         ic.defaultsComputed = defaultsComputed;
+        ic.tracingState = tracingState;
         return ic;
     }
 
@@ -538,5 +542,13 @@ public class InitConfig {
             }
             return false;
         }).toList();
+    }
+
+    public TracingState getTracingState() {
+        return tracingState;
+    }
+
+    public void setTracingState(TracingState tracingState) {
+        this.tracingState = tracingState;
     }
 }
