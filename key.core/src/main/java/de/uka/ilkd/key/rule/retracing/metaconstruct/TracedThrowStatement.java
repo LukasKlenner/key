@@ -8,8 +8,8 @@ import de.uka.ilkd.key.java.ast.StatementBlock;
 import de.uka.ilkd.key.java.ast.declaration.LocalVariableDeclaration;
 import de.uka.ilkd.key.java.ast.declaration.ParameterDeclaration;
 import de.uka.ilkd.key.java.ast.declaration.VariableSpecification;
+import de.uka.ilkd.key.java.ast.expression.Assignment;
 import de.uka.ilkd.key.java.ast.expression.Expression;
-import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
 import de.uka.ilkd.key.java.ast.statement.Catch;
 import de.uka.ilkd.key.logic.op.ProgramSV;
 import de.uka.ilkd.key.proof.retracing.TracingState;
@@ -95,7 +95,7 @@ public class TracedThrowStatement extends ProgramTransformer {
         ParameterDeclaration catchParam = catchCase.getParameterDeclaration();
         VariableSpecification exceptionVarSpec = catchParam.getVariableSpecification();
         LocalVariableDeclaration exceptionDecl = new LocalVariableDeclaration(catchParam.getTypeReference(), catchParam.getVariableSpecification());
-        CopyAssignment exceptionAssignment = KeYJavaASTFactory.assign((Expression) exceptionVarSpec.getProgramVariable(), throwExpr);
+        Assignment<?> exceptionAssignment = KeYJavaASTFactory.assign((Expression) exceptionVarSpec.getProgramVariable(), throwExpr);
 
         ImmutableList<ProgramElement> replacement = ImmutableList.of(exceptionDecl, exceptionAssignment, catchBody);
 

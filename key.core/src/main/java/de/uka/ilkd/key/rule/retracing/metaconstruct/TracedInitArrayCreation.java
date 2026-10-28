@@ -8,8 +8,8 @@ import de.uka.ilkd.key.java.ast.abstraction.ArrayType;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
 import de.uka.ilkd.key.java.ast.declaration.LocalVariableDeclaration;
 import de.uka.ilkd.key.java.ast.expression.ArrayInitializer;
+import de.uka.ilkd.key.java.ast.expression.Assignment;
 import de.uka.ilkd.key.java.ast.expression.Expression;
-import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
 import de.uka.ilkd.key.java.ast.expression.operator.NewArray;
 import de.uka.ilkd.key.java.ast.reference.ReferencePrefix;
 import de.uka.ilkd.key.java.ast.reference.TypeReference;
@@ -17,7 +17,6 @@ import de.uka.ilkd.key.logic.ProgramElementName;
 import de.uka.ilkd.key.logic.VariableNamer;
 import de.uka.ilkd.key.logic.op.ProgramVariable;
 import de.uka.ilkd.key.proof.retracing.TracingState;
-import de.uka.ilkd.key.rule.inst.SVInstantiations;
 import de.uka.ilkd.key.rule.metaconstruct.InitArrayCreation;
 import de.uka.ilkd.key.util.Debug;
 import org.key_project.logic.op.sv.SchemaVariable;
@@ -85,7 +84,7 @@ public class TracedInitArrayCreation extends InitArrayCreation {
                                 ),
                                 baseType
                         );
-                CopyAssignment arrayAssign = KeYJavaASTFactory.assign(
+                Assignment<?> arrayAssign = KeYJavaASTFactory.assign(
                         KeYJavaASTFactory.passiveExpression(KeYJavaASTFactory.arrayFieldAccess((ReferencePrefix) resultVar, KeYJavaASTFactory.intLiteral(i))),
                         (ProgramVariable) arrayDecl.getVariables().get(0).getProgramVariable()
                 );

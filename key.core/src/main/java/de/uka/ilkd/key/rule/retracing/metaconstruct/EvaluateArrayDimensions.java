@@ -5,9 +5,9 @@ import de.uka.ilkd.key.java.Services;
 import de.uka.ilkd.key.java.ast.ProgramElement;
 import de.uka.ilkd.key.java.ast.Statement;
 import de.uka.ilkd.key.java.ast.abstraction.KeYJavaType;
+import de.uka.ilkd.key.java.ast.expression.Assignment;
 import de.uka.ilkd.key.java.ast.expression.Expression;
 import de.uka.ilkd.key.java.ast.expression.PassiveExpression;
-import de.uka.ilkd.key.java.ast.expression.operator.CopyAssignment;
 import de.uka.ilkd.key.java.ast.expression.operator.NewArray;
 import de.uka.ilkd.key.java.ast.reference.ExecutionContext;
 import de.uka.ilkd.key.logic.ProgramElementName;
@@ -33,7 +33,7 @@ public class EvaluateArrayDimensions extends ProgramTransformer {
         final ExecutionContext ec = svInst.getExecutionContext();
         final VariableNamer varNamer = services.getVariableNamer();
 
-        if (!(pe instanceof CopyAssignment assignment)) {
+        if (!(pe instanceof Assignment assignment)) {
             throw new IllegalStateException("Array dimensions can only be evaluated in the context of a CopyAssignment.");
         }
 
