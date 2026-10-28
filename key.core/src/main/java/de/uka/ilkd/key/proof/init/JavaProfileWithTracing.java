@@ -8,7 +8,7 @@ import org.key_project.util.collection.ImmutableList;
 
 public class JavaProfileWithTracing extends JavaProfile {
 
-    public static final String PROFILE_ID = "Java Profile with Tracing";
+    public static final String PROFILE_ID = "Java Profile with Retracing";
 
     private static final JavaProfileWithTracing INSTANCE = new JavaProfileWithTracing();
 

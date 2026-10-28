@@ -22,8 +22,8 @@ decls
     ( bootClassPath          // for problems
     | stlist=classPaths      // for problems
     | string=programSource      // for problems
-    | traceFile              // for tracing
-    | traceFunctionDB        // for tracing
+    | traceFile              // for retracing
+    | traceFunctionDB        // for retracing
     | one_include_statement
     | options_choice
     | option_decls
